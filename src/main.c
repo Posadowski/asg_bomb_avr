@@ -2,66 +2,134 @@
 /* ASG bomb  */
 #include <avr/io.h>
 #include <util/delay.h>
+#include <avr/interrupt.h>
+
 
 #ifdef F_CPU
 #undef F_CPU
 #endif
 
 #define F_CPU 16000000UL
+#define TIMER1_PRESCALER 1024
+#define TIMER1_COMPARE_MATCH (F_CPU / TIMER1_PRESCALER / 1) // 1 sekunda
 
 #define BAUD 9600
-#define MYUBRR F_CPU/16/BAUD-1
+#define MYUBRR F_CPU / 16 / BAUD - 1
 
 #include "../lib/lcd/lcd.h"
 #include "../lib/keypad/keypad.h"
 #include "../lib/usart/usart.h"
+#include "../lib/task_machinery/task_machinery.h"
 
-uint8_t rowPins[ROWS] = {R1, R2, R3,
-                      R4}; // connect to the row pinouts of the keypad
-uint8_t colPins[COLS] = {C1, C2, C3,
-                      C4}; // connect to the column pinouts of the keypad
+extern uint8_t keypad_rows_pin[ROWS];
+extern uint8_t keypad_rows_port[ROWS];
 
-void readInputs(){
-		if (!(PINB & (1 << R1))) {
-			printf("R1\r\n");
-		}  if(!(PINB & (1 << R2))){
-			printf("R2\r\n");
-		} if(!(PINB & (1 << R3))){
-			printf("R3\r\n");
-		} if(!(PINB & (1 << R4))){
-			printf("R4\r\n");
-		}
-}					  
+extern uint8_t keypad_columns_pin[COLS];
+extern uint8_t keypad_columns_port[COLS];
+extern uint8_t keypad_columns_ddr[COLS];
+
+task_queue *head = NULL;
+
+void readInputs()
+{
+	if (!(PINB & (1 << R1_PIN)))
+	{
+		printf("R1\r\n");
+	}
+	if (!(PINB & (1 << R2_PIN)))
+	{
+		printf("R2\r\n");
+	}
+	if (!(PINB & (1 << R3_PIN)))
+	{
+		printf("R3\r\n");
+	}
+	if (!(PINB & (1 << R4_PIN)))
+	{
+		printf("R4\r\n");
+	}
+}
+
+void queue_test(void *arg){
+	static uint8_t numer_wywolania;
+	printf("test_wywolania_taska %d\n",numer_wywolania);
+}
+
 FILE USART_Transmit_stream = FDEV_SETUP_STREAM(USART_Transmit_printf, NULL, _FDEV_SETUP_WRITE);
+
+ISR(TIMER1_COMPA_vect) {
+     task_queue *current = head;
+    while (current != NULL) {
+        current->time_to_execute--;
+        if (current->time_to_execute == 0) {
+            if (current->callback != NULL) {
+                current->callback(current->data);
+            }
+            // Usunięcie elementu z kolejki
+            if (current->prev != NULL) {
+                current->prev->next = current->next;
+            } else {
+                head = current->next;
+            }
+            if (current->next != NULL) {
+                current->next->prev = current->prev;
+            }
+             task_queue *temp = current;
+            current = current->next;
+            free(temp);
+        } else {
+            current = current->next;
+        }
+    }
+}
+
+void init_timer() {
+    TCCR1B |= (1 << WGM12); // Tryb CTC
+    TIMSK1 |= (1 << OCIE1A); // Zezwól na przerwanie na porównanie
+    OCR1A = TIMER1_COMPARE_MATCH; // Ustaw czas porównania
+    TCCR1B |= (1 << CS12) | (1 << CS10); // Prescaler 1024
+    sei();
+}
+
 int main(void)
-{	
+{
 	USART_Init(MYUBRR);
 	stdout = &USART_Transmit_stream;
 	//_delay_ms(2000);
-	DDRB=0xff;
-	
-	LiquidCrystalDevice_t device = lq_init(0x27, 16, 2, LCD_5x8DOTS); // intialize 4-lines display
-	lq_turnOnBacklight(&device); // simply turning on the backlight
+	DDRB = 0xff;
 
-	lq_print(&device, "Hello world!");
+	LiquidCrystalDevice_t device = lq_init(0x27, 16, 2, LCD_5x8DOTS); // intialize 4-lines display
+	lq_turnOnBacklight(&device);									  // simply turning on the backlight
+
+	lq_print(&device, "TEST!");
 	lq_setCursor(&device, 1, 0); // moving cursor to the next line
 	lq_print(&device, "How are you?");
 
-	keypad_init();
-
-	printf("Hello\r\n");
-
-	while(1)
-	{
-    printf("__________________\r\n");
-	// Ustawienie stanu niskiego na wyjściu
-    PORTB &= ~(1 << C1);
-	readInputs();
-	DDRB |= (1 << C1);
-
+	keypad_init(); // define pins in lib/keypad/keypad.h
 
 	
-	_delay_ms(1000);
+	taskMachinery_engque(&head,5,queue_test,NULL);
+	init_timer();
 
+	while (1)
+	{
+		printf("__________________\r\n");
+		lq_clear(&device);
+		lq_setCursor(&device, 0, 0); 
+		lq_print(&device, "Current pressed: ");
+		lq_setCursor(&device, 1, 0); 
+
+		char pressed[16] = {};
+		pressed[0] = keyboard_check_key_pressed();
+
+		if(pressed[0] != '\0'){
+			printf("pressed %s\r\n",pressed);
+			lq_print(&device,pressed);
+		} else {
+			lq_print(&device,"               ");
+		}
+
+		_delay_ms(1000);
 	}
 }
+
