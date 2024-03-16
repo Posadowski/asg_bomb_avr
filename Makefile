@@ -17,7 +17,7 @@ USART_DIR = $(LIB_DIR)/usart
 BUILD_DIR = build
 
 # Source files
-SRC_FILES = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(LCD_DIR)/*.c) $(wildcard $(KEYPAD_DIR)/*.c) $(wildcard $(USART_DIR)/*.c)
+SRC_FILES = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(LIB_DIR)/**/*.c) 
 OBJ_FILES = $(patsubst %.c, $(BUILD_DIR)/%.o, $(notdir $(SRC_FILES)))
 
 # Target
@@ -34,14 +34,8 @@ $(TARGET).elf: $(OBJ_FILES)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: $(LCD_DIR)/%.c
-	$(CC) $(CFLAGS) -std=c99 -c $< -o $@
-
-$(BUILD_DIR)/%.o: $(KEYPAD_DIR)/%.c
-	$(CC) $(CFLAGS) -std=c99 -c $< -o $@		
-
-$(BUILD_DIR)/%.o: $(USART_DIR)/%.c
-	$(CC) $(CFLAGS) -std=c99 -c $< -o $@		
+$(BUILD_DIR)/%.o: $(LIB_DIR)/**/%.c
+	$(CC) $(CFLAGS) -std=c99 -c $< -o $@	
 
 create_build_dir:
 	@mkdir -p $(BUILD_DIR)
