@@ -21,13 +21,6 @@
 #include "../lib/usart/usart.h"
 #include "../lib/task_machinery/task_machinery.h"
 
-extern uint8_t keypad_rows_pin[ROWS];
-extern uint8_t keypad_rows_port[ROWS];
-
-extern uint8_t keypad_columns_pin[COLS];
-extern uint8_t keypad_columns_port[COLS];
-extern uint8_t keypad_columns_ddr[COLS];
-
 task_queue *head = NULL;
 
 void readInputs()
@@ -51,7 +44,6 @@ void readInputs()
 }
 
 void queue_test(void *arg){
-	static uint8_t numer_wywolania;
 	printf("taskID %u",head->taskID);
 	taskMachinery_engque(&head,5000,queue_test,NULL);
 }
