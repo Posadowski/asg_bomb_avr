@@ -11,7 +11,7 @@
 
 #define F_CPU 16000000UL
 #define TIMER1_PRESCALER 1024
-#define TIMER1_COMPARE_MATCH (F_CPU / TIMER1_PRESCALER / 1) // 1 sekunda
+#define TIMER1_COMPARE_MATCH (F_CPU / TIMER1_PRESCALER / 1000) // 1 mili second
 
 #define BAUD 9600
 #define MYUBRR F_CPU / 16 / BAUD - 1
@@ -52,7 +52,9 @@ void readInputs()
 
 void queue_test(void *arg){
 	static uint8_t numer_wywolania;
-	printf("test_wywolania_taska %d\n",numer_wywolania);
+	printf("test_wywolania_taska %d\n",numer_wywolania++);
+	printf("taskID %u",head->taskID);
+	taskMachinery_engque(&head,5000,queue_test,NULL);
 }
 
 FILE USART_Transmit_stream = FDEV_SETUP_STREAM(USART_Transmit_printf, NULL, _FDEV_SETUP_WRITE);
@@ -108,7 +110,7 @@ int main(void)
 	keypad_init(); // define pins in lib/keypad/keypad.h
 
 	
-	taskMachinery_engque(&head,5,queue_test,NULL);
+	taskMachinery_engque(&head,5000,queue_test,NULL);
 	init_timer();
 
 	while (1)
