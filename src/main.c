@@ -4,7 +4,6 @@
 #include <util/delay.h>
 #include <avr/interrupt.h>
 
-
 #ifdef F_CPU
 #undef F_CPU
 #endif
@@ -43,45 +42,57 @@ void readInputs()
 	}
 }
 
-void queue_test(void *arg){
-	printf("taskID %u",head->taskID);
-	taskMachinery_engque(&head,5000,queue_test,NULL);
+void queue_test(void *arg)
+{
+	printf("taskID %u", head->taskID);
+	taskMachinery_engque(&head, 5000, queue_test, NULL);
 }
 
 FILE USART_Transmit_stream = FDEV_SETUP_STREAM(USART_Transmit_printf, NULL, _FDEV_SETUP_WRITE);
 
-ISR(TIMER1_COMPA_vect) {
-     task_queue *current = head;
-    while (current != NULL) {
-        current->time_to_execute--;
-        if (current->time_to_execute == 0) {
-            if (current->callback != NULL) {
-                current->callback(current->data);
-            }
-            // Usunięcie elementu z kolejki
-            if (current->prev != NULL) {
-                current->prev->next = current->next;
-            } else {
-                head = current->next;
-            }
-            if (current->next != NULL) {
-                current->next->prev = current->prev;
-            }
-             task_queue *temp = current;
-            current = current->next;
-            free(temp);
-        } else {
-            current = current->next;
-        }
-    }
+ISR(TIMER1_COMPA_vect)
+{
+	task_queue *current = head;
+	while (current != NULL)
+	{
+		current->time_to_execute--;
+		if (current->time_to_execute == 0)
+		{
+			if (current->callback != NULL)
+			{
+				current->callback(current->data);
+			}
+			// Usunięcie elementu z kolejki
+			if (current->prev != NULL)
+			{
+				current->prev->next = current->next;
+			}
+			else
+			{
+				head = current->next;
+			}
+			if (current->next != NULL)
+			{
+				current->next->prev = current->prev;
+			}
+			task_queue *temp = current;
+			current = current->next;
+			free(temp);
+		}
+		else
+		{
+			current = current->next;
+		}
+	}
 }
 
-void init_timer() {
-    TCCR1B |= (1 << WGM12); // Tryb CTC
-    TIMSK1 |= (1 << OCIE1A); // Zezwól na przerwanie na porównanie
-    OCR1A = TIMER1_COMPARE_MATCH; // Ustaw czas porównania
-    TCCR1B |= (1 << CS12) | (1 << CS10); // Prescaler 1024
-    sei();
+void init_timer()
+{
+	TCCR1B |= (1 << WGM12);				 // Tryb CTC
+	TIMSK1 |= (1 << OCIE1A);			 // Zezwól na przerwanie na porównanie
+	OCR1A = TIMER1_COMPARE_MATCH;		 // Ustaw czas porównania
+	TCCR1B |= (1 << CS12) | (1 << CS10); // Prescaler 1024
+	sei();
 }
 
 int main(void)
@@ -100,37 +111,38 @@ int main(void)
 
 	keypad_init(); // define pins in lib/keypad/keypad.h
 
-	
-	taskMachinery_engque(&head,5000,queue_test,NULL);
-	taskMachinery_engque(&head,_KEYPAD_CHECK_TIME,keypad_check_key_pressed,NULL);
+	taskMachinery_engque(&head, 5000, queue_test, NULL);
+	taskMachinery_engque(&head, _KEYPAD_CHECK_TIME, keypad_check_key_pressed, NULL);
 	init_timer();
 
 	while (1)
 	{
 		static uint8_t displayChanged = 1;
 		static char pressed[16] = {};
-		if(pressed[0] != keypad_get_last_pressed_key()){
+		if (pressed[0] != keypad_get_last_pressed_key())
+		{
 			pressed[0] = keypad_get_last_pressed_key();
 			displayChanged = 1;
 		}
-		if(displayChanged == 1){
+		if (displayChanged == 1)
+		{
 			displayChanged = 0;
 			printf("__________________\r\n");
 			lq_clear(&device);
-			lq_setCursor(&device, 0, 0); 
+			lq_setCursor(&device, 0, 0);
 			lq_print(&device, "Current pressed: ");
-			lq_setCursor(&device, 1, 0); 
+			lq_setCursor(&device, 1, 0);
 
-			
-
-			if(pressed[0] != '\0'){
-				printf("pressed %s\r\n",pressed);
-				lq_print(&device,pressed);
-			} else {
-				lq_print(&device,"               ");
+			if (pressed[0] != '\0')
+			{
+				printf("pressed %s\r\n", pressed);
+				lq_print(&device, pressed);
+			}
+			else
+			{
+				lq_print(&device, "               ");
 			}
 		}
 		//_delay_ms(1000);
 	}
 }
-

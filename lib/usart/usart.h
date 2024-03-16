@@ -9,4 +9,4 @@ void USART_Init(unsigned int ubrr);
 void USART_Transmit(unsigned char data);
 int USART_Transmit_printf(char data, FILE *stream);
 
-#endif //USART_H_
+#endif // USART_H_

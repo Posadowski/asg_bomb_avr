@@ -1,6 +1,7 @@
 #include "usart.h"
 
-void USART_Init(unsigned int ubrr) {
+void USART_Init(unsigned int ubrr)
+{
     // Ustawienie prędkości transmisji
     UBRR0H = (unsigned char)(ubrr >> 8);
     UBRR0L = (unsigned char)ubrr;
@@ -10,7 +11,8 @@ void USART_Init(unsigned int ubrr) {
     UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
 }
 
-void USART_Transmit(unsigned char data) {
+void USART_Transmit(unsigned char data)
+{
     // Czekaj, aż bufor nadajnika będzie gotowy do wysyłki
     while (!(UCSR0A & (1 << UDRE0)))
         ;
@@ -18,7 +20,8 @@ void USART_Transmit(unsigned char data) {
     UDR0 = data;
 }
 
-int USART_Transmit_printf(char data, FILE *stream) {
+int USART_Transmit_printf(char data, FILE *stream)
+{
     USART_Transmit(data);
     return 0;
 }

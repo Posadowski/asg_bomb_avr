@@ -3,28 +3,27 @@
 
 #include <avr/io.h>
 #include <stdlib.h>
-enum taskMachinery_error{
+enum taskMachinery_error
+{
     TASK_OK = 0,
     TASK_ALLOC_ERROR,
     TASK_TIME_OUT_OF_RANGE,
     TASK_QUEUE_EMPTY
 };
 
-typedef struct task_queue {
+typedef struct task_queue
+{
     uint16_t taskID;
-    uint16_t time_to_execute; //milliseconds 
+    uint16_t time_to_execute; // milliseconds
     struct task_queue *next;
     struct task_queue *prev;
-    void (*callback)(void*); // pointer on callback
-    void* data; // pointer to data to be passed to the callback function
-}task_queue;
+    void (*callback)(void *); // pointer on callback
+    void *data;               // pointer to data to be passed to the callback function
+} task_queue;
 
-//void taskMachinery_deque(uint16_t task_ID);
-enum taskMachinery_error taskMachinery_engque(task_queue **head, uint16_t time, void (*callback)(void*), void* data);
+// void taskMachinery_deque(uint16_t task_ID);
+enum taskMachinery_error taskMachinery_engque(task_queue **head, uint16_t time, void (*callback)(void *), void *data);
 
 uint16_t taskMachinery_task_count();
 
-
-
-
-#endif //TASK_MACHINERY_H_
+#endif // TASK_MACHINERY_H_
