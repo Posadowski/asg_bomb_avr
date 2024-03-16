@@ -12,7 +12,7 @@ enum taskMachinery_error{
 
 typedef struct task_queue {
     uint16_t taskID;
-    uint16_t time_to_execute;
+    uint16_t time_to_execute; //milliseconds 
     struct task_queue *next;
     struct task_queue *prev;
     void (*callback)(void*); // pointer on callback
