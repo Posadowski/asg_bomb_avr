@@ -18,32 +18,7 @@ void keypad_init(){
 
 }
 
-
-void keypad_tick(){
-    for (int i = 0; i < COLS; i++) {
-        keypad_columns_ddr[i] |= (1 << keypad_columns_pin[i]); // set HIGH on colums 
-    }
-
-    uint8_t i = 0;
-    for (uint8_t c = 0; c < COLS; c++) {
-       keypad_columns_port[i] &= ~(1 << keypad_columns_pin[i]); //set LOW
-
-       _delay_ms(_KEYPAD_SETTLING_DELAY);
-    for (uint8_t r = 0; r < ROWS; r++) {
-      i = r * COLS + c;
-      
-      if(!(PINB & (1 << keypad_rows_pin[r]))){ // read state from row
-        keyboard_event.state = _JUST_PRESSED;
-        keyboard_event.column = c;
-        keyboard_event.row = r;
-      }
-    }
-    keypad_columns_ddr[c] |= (1 << keypad_columns_pin[c]); // set HIGH 
-  }
-}
-
-char keyboard_check_key_pressed() {
-  
+char keyboard_check_key_pressed(void *arg) {
     for (int col = 0; col < 4; col++) {
         switch (col) {
             case 0:
