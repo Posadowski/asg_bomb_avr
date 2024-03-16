@@ -45,26 +45,27 @@
 #define LCD_BACKLIGHT 0x08
 #define LCD_NOBACKLIGHT 0x00
 
-#define LCD_ENABLE_BIT 0b00000100		   // Enable bit
-#define LCD_READ_WRITE_BIT 0b00000010	   // Read/Write bit
-#define LCD_REGISTER_SELECT_BIT 0b00000001 // Register select bit
+#define LCD_ENABLE_BIT 0b00000100           // Enable bit
+#define LCD_READ_WRITE_BIT 0b00000010       // Read/Write bit
+#define LCD_REGISTER_SELECT_BIT 0b00000001  // Register select bit
 
-typedef struct LiquidCrystalDevice_t
-{
-	uint8_t Address;
-	uint8_t Columns;
-	uint8_t Rows;
-	uint8_t Backlight;
-	uint8_t DisplayFunction;
-	uint8_t DisplayControl;
-	uint8_t DisplayMode;
+typedef struct LiquidCrystalDevice_t {
+  uint8_t Address;
+  uint8_t Columns;
+  uint8_t Rows;
+  uint8_t Backlight;
+  uint8_t DisplayFunction;
+  uint8_t DisplayControl;
+  uint8_t DisplayMode;
 } LiquidCrystalDevice_t;
 
-struct LiquidCrystalDevice_t lq_init(uint8_t address, uint8_t columns, uint8_t rows, uint8_t dotSize);
+struct LiquidCrystalDevice_t lq_init(uint8_t address, uint8_t columns,
+                                     uint8_t rows, uint8_t dotSize);
 
 void lq_clear(struct LiquidCrystalDevice_t *device);
 
-void lq_setCursor(struct LiquidCrystalDevice_t *device, uint8_t row, uint8_t column);
+void lq_setCursor(struct LiquidCrystalDevice_t *device, uint8_t row,
+                  uint8_t column);
 
 void lq_returnHome(struct LiquidCrystalDevice_t *device);
 
@@ -98,11 +99,13 @@ void lq_turnOnAutoscroll(struct LiquidCrystalDevice_t *device);
 
 void lq_turnOffAutoscroll(struct LiquidCrystalDevice_t *device);
 
-void lq_createChar(struct LiquidCrystalDevice_t *device, uint8_t slot, uint8_t charmap[8]);
+void lq_createChar(struct LiquidCrystalDevice_t *device, uint8_t slot,
+                   uint8_t charmap[8]);
 
 void lq_sendCommand(struct LiquidCrystalDevice_t *device, uint8_t command);
 
-void lq_writeDeviceByte(struct LiquidCrystalDevice_t *device, uint8_t value, uint8_t mode);
+void lq_writeDeviceByte(struct LiquidCrystalDevice_t *device, uint8_t value,
+                        uint8_t mode);
 
 void lq_writeDevice4Bits(struct LiquidCrystalDevice_t *device, uint8_t value);
 

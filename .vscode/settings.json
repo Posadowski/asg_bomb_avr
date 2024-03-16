@@ -1,0 +1,8 @@
+{
+    "C_Cpp.clang_format_style": "Google",
+    "[c]": {
+        "editor.wordWrap": "off",
+        "editor.wrappingStrategy": "wordWrapColumn",
+        "editor.wordWrapColumn": 0
+    }
+}
