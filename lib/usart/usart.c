@@ -2,21 +2,21 @@
 
 void USART_Init(unsigned int ubrr)
 {
-    // Ustawienie prędkości transmisji
+    // Setting the transmission speed
     UBRR0H = (unsigned char)(ubrr >> 8);
     UBRR0L = (unsigned char)ubrr;
-    // Włączenie nadajnika i odbiornika
+    // Turn on the transmitter and receiver
     UCSR0B = (1 << TXEN0) | (1 << RXEN0);
-    // Ustawienie formatu ramki: 8 bitów danych, 1 bit stopu
+    // Frame format setting: 8 data bits, 1 stop bit
     UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
 }
 
 void USART_Transmit(unsigned char data)
 {
-    // Czekaj, aż bufor nadajnika będzie gotowy do wysyłki
+    //Wait until the transmitter buffer is ready for sending
     while (!(UCSR0A & (1 << UDRE0)))
         ;
-    // Umieść dane do bufora i zainicjuj transmisję
+    // Place the data in the buffer and initiate transmission
     UDR0 = data;
 }
 

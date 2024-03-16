@@ -22,26 +22,6 @@
 
 task_queue *head = NULL;
 
-void readInputs()
-{
-	if (!(PINB & (1 << R1_PIN)))
-	{
-		printf("R1\r\n");
-	}
-	if (!(PINB & (1 << R2_PIN)))
-	{
-		printf("R2\r\n");
-	}
-	if (!(PINB & (1 << R3_PIN)))
-	{
-		printf("R3\r\n");
-	}
-	if (!(PINB & (1 << R4_PIN)))
-	{
-		printf("R4\r\n");
-	}
-}
-
 void queue_test(void *arg)
 {
 	printf("taskID %u", head->taskID);
@@ -62,7 +42,7 @@ ISR(TIMER1_COMPA_vect)
 			{
 				current->callback(current->data);
 			}
-			// Usunięcie elementu z kolejki
+			// Remove an item from the queue
 			if (current->prev != NULL)
 			{
 				current->prev->next = current->next;
@@ -88,9 +68,9 @@ ISR(TIMER1_COMPA_vect)
 
 void init_timer()
 {
-	TCCR1B |= (1 << WGM12);				 // Tryb CTC
-	TIMSK1 |= (1 << OCIE1A);			 // Zezwól na przerwanie na porównanie
-	OCR1A = TIMER1_COMPARE_MATCH;		 // Ustaw czas porównania
+	TCCR1B |= (1 << WGM12);				 // CTC Mode
+	TIMSK1 |= (1 << OCIE1A);			 // Allow interruption for comparison
+	OCR1A = TIMER1_COMPARE_MATCH;		 // Set the comparison time
 	TCCR1B |= (1 << CS12) | (1 << CS10); // Prescaler 1024
 	sei();
 }
@@ -143,6 +123,5 @@ int main(void)
 				lq_print(&device, "               ");
 			}
 		}
-		//_delay_ms(1000);
 	}
 }
