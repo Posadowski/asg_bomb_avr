@@ -1,7 +1,12 @@
 #include "keypad.h"
 
+#include "../task_machinery/task_machinery.h"
+
 #include <avr/io.h>
 #include <util/delay.h>
+
+extern task_queue *head;
+char keypad_current_pressed_key = '\0';
 
 void keypad_init(){
 
@@ -18,7 +23,9 @@ void keypad_init(){
 
 }
 
-char keyboard_check_key_pressed(void *arg) {
+void keypad_check_key_pressed(void *arg) {
+   uint8_t keypad_state = KEYPAD_RELEASES;
+
     for (int col = 0; col < 4; col++) {
         switch (col) {
             case 0:
@@ -52,51 +59,62 @@ char keyboard_check_key_pressed(void *arg) {
             switch (row) {
                 case 0:
                   if(col == 0){
-                    if (!(PINB & (1 << R1_PIN))) return '1';
+                    if (!(PINB & (1 << R1_PIN))) {keypad_current_pressed_key = '1'; keypad_state = KEYPAD_PRESSED;}
                   } else if (col == 1){
-                    if (!(PINB & (1 << R1_PIN))) return '2';
+                    if (!(PINB & (1 << R1_PIN))) {keypad_current_pressed_key = '2'; keypad_state = KEYPAD_PRESSED;}
                   } else if (col == 2){
-                    if (!(PINB & (1 << R1_PIN))) return '3';
+                    if (!(PINB & (1 << R1_PIN))) {keypad_current_pressed_key = '3'; keypad_state = KEYPAD_PRESSED;}
                   } else if (col == 3){
-                    if (!(PINB & (1 << R1_PIN))) return 'A';
+                    if (!(PINB & (1 << R1_PIN))) {keypad_current_pressed_key = 'A'; keypad_state = KEYPAD_PRESSED;}
                   } 
                     break;
                 case 1:
                   if (col == 0){
-                    if (!(PINB & (1 << R2_PIN))) return '4';
+                    if (!(PINB & (1 << R2_PIN))) {keypad_current_pressed_key = '4'; keypad_state = KEYPAD_PRESSED;}
                   } else if (col == 1){
-                    if (!(PINB & (1 << R2_PIN))) return '5';
+                    if (!(PINB & (1 << R2_PIN))) {keypad_current_pressed_key = '5'; keypad_state = KEYPAD_PRESSED;}
                   } else if (col == 2){
-                    if (!(PINB & (1 << R2_PIN))) return '6';
+                    if (!(PINB & (1 << R2_PIN))) {keypad_current_pressed_key = '6'; keypad_state = KEYPAD_PRESSED;}
                   } else if (col == 3){
-                    if (!(PINB & (1 << R2_PIN))) return 'B';
+                    if (!(PINB & (1 << R2_PIN))) {keypad_current_pressed_key = 'B'; keypad_state = KEYPAD_PRESSED;}
                   }  
                     
                     break;
                 case 2:
                   if (col == 0){
-                    if (!(PINB & (1 << R3_PIN))) return '7';
+                    if (!(PINB & (1 << R3_PIN))) {keypad_current_pressed_key = '7'; keypad_state = KEYPAD_PRESSED;}
                   } else if (col == 1){
-                    if (!(PINB & (1 << R3_PIN))) return '8';
+                    if (!(PINB & (1 << R3_PIN))) {keypad_current_pressed_key = '8'; keypad_state = KEYPAD_PRESSED;}
                   } else if (col == 2){
-                    if (!(PINB & (1 << R3_PIN))) return '9';
+                    if (!(PINB & (1 << R3_PIN))) {keypad_current_pressed_key = '9'; keypad_state = KEYPAD_PRESSED;}
                   } else if (col == 3){
-                    if (!(PINB & (1 << R3_PIN))) return 'C';
+                    if (!(PINB & (1 << R3_PIN))) {keypad_current_pressed_key = 'C'; keypad_state = KEYPAD_PRESSED;}
                   } 
                     break;
                 case 3:
                   if (col == 0){
-                    if (!(PINB & (1 << R4_PIN))) return '*';
+                    if (!(PINB & (1 << R4_PIN))) {keypad_current_pressed_key = '*'; keypad_state = KEYPAD_PRESSED;}
                   } else if (col == 1){
-                    if (!(PINB & (1 << R4_PIN))) return '0';
+                    if (!(PINB & (1 << R4_PIN))) {keypad_current_pressed_key = '0'; keypad_state = KEYPAD_PRESSED;}
                   } else if (col == 2){
-                    if (!(PINB & (1 << R4_PIN))) return '#';
+                    if (!(PINB & (1 << R4_PIN))) {keypad_current_pressed_key = '#'; keypad_state = KEYPAD_PRESSED;}
                   } else if (col == 3){
-                    if (!(PINB & (1 << R4_PIN))) return 'D';
+                    if (!(PINB & (1 << R4_PIN))){ 
+                      keypad_current_pressed_key = 'D'; 
+                      keypad_state = KEYPAD_PRESSED;
+                    }
                   }    
                     break;
             }
         }
     }
-    return '\0'; //If there is no button pressed
+    if(keypad_state != KEYPAD_PRESSED){
+      keypad_current_pressed_key = '\0'; //If there is no button pressed
+    }
+    taskMachinery_engque(&head,_KEYPAD_CHECK_TIME,keypad_check_key_pressed,NULL);
+}
+
+
+char keypad_get_last_pressed_key(){
+   return keypad_current_pressed_key;
 }

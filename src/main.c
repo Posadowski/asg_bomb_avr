@@ -52,7 +52,6 @@ void readInputs()
 
 void queue_test(void *arg){
 	static uint8_t numer_wywolania;
-	printf("test_wywolania_taska %d\n",numer_wywolania++);
 	printf("taskID %u",head->taskID);
 	taskMachinery_engque(&head,5000,queue_test,NULL);
 }
@@ -111,27 +110,35 @@ int main(void)
 
 	
 	taskMachinery_engque(&head,5000,queue_test,NULL);
+	taskMachinery_engque(&head,_KEYPAD_CHECK_TIME,keypad_check_key_pressed,NULL);
 	init_timer();
 
 	while (1)
 	{
-		printf("__________________\r\n");
-		lq_clear(&device);
-		lq_setCursor(&device, 0, 0); 
-		lq_print(&device, "Current pressed: ");
-		lq_setCursor(&device, 1, 0); 
-
-		char pressed[16] = {};
-		pressed[0] = keyboard_check_key_pressed();
-
-		if(pressed[0] != '\0'){
-			printf("pressed %s\r\n",pressed);
-			lq_print(&device,pressed);
-		} else {
-			lq_print(&device,"               ");
+		static uint8_t displayChanged = 1;
+		static char pressed[16] = {};
+		if(pressed[0] != keypad_get_last_pressed_key()){
+			pressed[0] = keypad_get_last_pressed_key();
+			displayChanged = 1;
 		}
+		if(displayChanged == 1){
+			displayChanged = 0;
+			printf("__________________\r\n");
+			lq_clear(&device);
+			lq_setCursor(&device, 0, 0); 
+			lq_print(&device, "Current pressed: ");
+			lq_setCursor(&device, 1, 0); 
 
-		_delay_ms(1000);
+			
+
+			if(pressed[0] != '\0'){
+				printf("pressed %s\r\n",pressed);
+				lq_print(&device,pressed);
+			} else {
+				lq_print(&device,"               ");
+			}
+		}
+		//_delay_ms(1000);
 	}
 }
 

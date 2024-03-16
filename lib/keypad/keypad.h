@@ -41,21 +41,14 @@
 #define ROWS    4
 #define COLS    4 
 
-#define _KEY_PRESSED_POS (1)
-#define _KEY_PRESSED (1UL << _KEY_PRESSED_POS)
+#define KEYPAD_PRESSED  1
+#define KEYPAD_RELEASES 0
 
-#define _JUST_PRESSED_POS (2)
-#define _JUST_PRESSED (1UL << _JUST_PRESSED_POS)
 
-#define _JUST_RELEASED_POS (3)
-#define _JUST_RELEASED (1UL << _JUST_RELEASED_POS)
-
-#define KEY_JUST_RELEASED (0) ///< key has been released
-#define KEY_JUST_PRESSED (1)  ///< key has been pressed
-
-#define _KEYPAD_SETTLING_DELAY 20
+#define _KEYPAD_CHECK_TIME 5
 
 void keypad_init();
-char keyboard_check_key_pressed();
+void keypad_check_key_pressed(void *arg);
+char keypad_get_last_pressed_key();
 
 #endif //KEYPAD_H_
