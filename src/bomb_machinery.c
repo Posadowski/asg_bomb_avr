@@ -51,9 +51,13 @@ void activateBomb(uint16_t timeToExplode, const char *PassToDefused,
     if (time_to_explode > 1) {
       lq_setCursor(lcd, 0, 0);
       lq_print(lcd, "time left: ");
-      char string_time_to_print[LCD_LINE_LENGTH]; 
-      sprintf(string_time_to_print,"%u", time_to_explode);
-      lq_print(lcd, string_time_to_print);
+      char string_time_to_print[LCD_LINE_LENGTH];
+    // Calculating minutes and seconds
+    unsigned int minutes = time_to_explode / 60;
+    unsigned int seconds = time_to_explode % 60;
+    // Format time to mm:ss
+    sprintf(string_time_to_print, "%02u:%02u", minutes, seconds);
+    lq_print(lcd, string_time_to_print);
     } else {
       // tone(BUZZER_PIN, NOTE_C6);
       lq_clear(lcd);
@@ -67,7 +71,7 @@ void activateBomb(uint16_t timeToExplode, const char *PassToDefused,
         if (bombMachinery_positionInCommandTable <
             (sizeof(bombMachinery_enteredCommandTable) /
              sizeof(bombMachinery_enteredCommandTable[0]))) {
-          lq_setCursor(lcd, bombMachinery_positionInCommandTable, 1);
+          lq_setCursor(lcd, 1,bombMachinery_positionInCommandTable);
           char print[] = {key_pressed, '\0'};
           lq_print(lcd, print);
           uint8_t i = 0;
@@ -107,7 +111,8 @@ void activateBomb(uint16_t timeToExplode, const char *PassToDefused,
         }
 
         if (pass_wrong) {
-          lq_setCursor(lcd, 0, 1);
+          lq_clear(lcd);
+          lq_setCursor(lcd, 1, 0);
           lq_print(lcd, "password wrong");
         }
         uint8_t k;
