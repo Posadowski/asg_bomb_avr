@@ -5,14 +5,13 @@
 #include <string.h>
 
 #include "../lib/keypad/keypad.h"
-#include "../lib/memory/memory.h"
 #include "../lib/task_machinery/task_machinery.h"
 #include "../lib/usart/usart.h"
+
 #define TRUE 1
 #define FALSE 0
 
 extern task_queue *head;
-extern mem_data memory;
 uint8_t timerON = FALSE;
 uint16_t time_to_explode = 0;
 
