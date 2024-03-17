@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define LCD_LINE_LENGTH 16
+
 // commands
 #define LCD_CLEARDISPLAY 0x01
 #define LCD_RETURNHOME 0x02
