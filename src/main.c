@@ -10,7 +10,9 @@
 #include "../lib/memory/memory.h"
 #include "../lib/task_machinery/task_machinery.h"
 #include "../lib/usart/usart.h"
+
 #include "bomb_machinery.h"
+#include "settings_menu.h"
 
 #define SOFTWARE_VERSION "0.4"  // 0.3 last arduino version
 
@@ -154,6 +156,8 @@ int main(void) {
         activateBomb(memory.mem_preset2,memory.password,&device);
       }else if(key_pressed == (char)PRESET_3_KEY){
         activateBomb(memory.mem_preset3,memory.password,&device);
+      }else if(key_pressed == (char)SETTINGS_ENTER_KEY){
+        settings_menu(&device);
       }
     }
     old_key_pressed = key_pressed;
