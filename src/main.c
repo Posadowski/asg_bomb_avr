@@ -150,6 +150,10 @@ int main(void) {
         positionInCommandTable = 0;  // back to end
       }else if(key_pressed == (char)PRESET_1_KEY){
         activateBomb(memory.mem_preset1,memory.password,&device);
+      }else if(key_pressed == (char)PRESET_2_KEY){
+        activateBomb(memory.mem_preset2,memory.password,&device);
+      }else if(key_pressed == (char)PRESET_3_KEY){
+        activateBomb(memory.mem_preset3,memory.password,&device);
       }
     }
     old_key_pressed = key_pressed;
