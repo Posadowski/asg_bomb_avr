@@ -10,6 +10,7 @@
 #include "../lib/memory/memory.h"
 #include "../lib/task_machinery/task_machinery.h"
 #include "../lib/usart/usart.h"
+#include "bomb_machinery.h"
 
 #define SOFTWARE_VERSION "0.4"  // 0.3 last arduino version
 
@@ -27,8 +28,9 @@
 task_queue *head = NULL;
 mem_data memory = {};
 
+char enteredCommandTable[LCD_LINE_LENGTH];
+
 void queue_test(void *arg) {
-  printf("taskID %u", head->taskID);
   taskMachinery_engque(&head, 5000, queue_test, NULL);
 }
 
@@ -69,21 +71,26 @@ void init_timer() {
   sei();                                // turn on intterupt
 }
 
+void papaj_event() {
+  // TODO
+  printf("JP2GMD\n");
+}
+
 int main(void) {
   USART_Init(MYUBRR);
   stdout = &USART_Transmit_stream;
   //_delay_ms(2000);
   DDRB = 0xff;
 
-  LiquidCrystalDevice_t device =
-      lq_init(0x27, 16, 2, LCD_5x8DOTS);  // intialize 4-lines display
-  lq_turnOnBacklight(&device);            // simply turning on the backlight
+  LiquidCrystalDevice_t device = lq_init(
+      0x27, LCD_LINE_LENGTH, 2, LCD_5x8DOTS);  // intialize 4-lines display
+  lq_turnOnBacklight(&device);  // simply turning on the backlight
 
   lq_clear(&device);
   lq_setCursor(&device, 0, 0);
   lq_print(&device, "ASG Bomb!");
   lq_setCursor(&device, 1, 0);
-  char software_version[15] = "ver.";
+  char software_version[LCD_LINE_LENGTH] = "ver.";
   strcat(software_version, SOFTWARE_VERSION);
   lq_print(&device, software_version);
   _delay_ms(1000);
@@ -107,32 +114,65 @@ int main(void) {
   } else {
     printf("Memory read\r\n");
     printf("preset1 %u\r\n", memory.mem_preset1);
-    printf("preset2 %u\r\n", memory.mem_preset1);
-    printf("preset3 %u\r\n", memory.mem_preset1);
+    printf("preset2 %u\r\n", memory.mem_preset2);
+    printf("preset3 %u\r\n", memory.mem_preset3);
     printf("password %s\r\n", memory.password);
   }
-
+  lq_clear(&device);
+  lq_setCursor(&device, 0, 0);
   while (1) {
-    static uint8_t displayChanged = 1;
-    static char pressed[16] = {};
-    if (pressed[0] != keypad_get_last_pressed_key()) {
-      pressed[0] = keypad_get_last_pressed_key();
-      displayChanged = 1;
-    }
-    if (displayChanged == 1) {
-      displayChanged = 0;
-      printf("__________________\r\n");
-      lq_clear(&device);
-      lq_setCursor(&device, 0, 0);
-      lq_print(&device, "Current pressed: ");
-      lq_setCursor(&device, 1, 0);
-
-      if (pressed[0] != '\0') {
-        printf("pressed %s\r\n", pressed);
-        lq_print(&device, pressed);
-      } else {
-        lq_print(&device, "               ");
+    static uint8_t positionInCommandTable = 0;
+    static char old_key_pressed = '\0';
+    char key_pressed = keypad_get_last_pressed_key();
+    if (old_key_pressed != key_pressed) {
+      if (key_pressed >= '0' && key_pressed <= '9') {
+        if (positionInCommandTable <
+            (sizeof(enteredCommandTable) / sizeof(enteredCommandTable[0]))) {
+          enteredCommandTable[positionInCommandTable] = key_pressed;
+          enteredCommandTable[++positionInCommandTable] = '\0';
+          char print[] = {key_pressed, '\0'};
+          lq_print(&device, print);
+        }
+      } else if (key_pressed == (char)ENTER_KEY) {
+        printf("%s\n", enteredCommandTable);
+        if ((enteredCommandTable[0] == '2' && enteredCommandTable[1] == '1' &&
+             enteredCommandTable[2] == '3' && enteredCommandTable[3] == '7' &&
+             enteredCommandTable[4] == '\0')) {
+          papaj_event();
+        }
+        lq_clear(&device);
+        uint8_t i = 0;
+        for (i = 0;
+             i < (sizeof(enteredCommandTable) / sizeof(enteredCommandTable[0]));
+             i++) {
+          enteredCommandTable[i] = ' ';
+        }
+        positionInCommandTable = 0;  // back to end
+      }else if(key_pressed == (char)PRESET_1_KEY){
+        activateBomb(memory.mem_preset1,memory.password,&device);
       }
     }
+    old_key_pressed = key_pressed;
+    // static uint8_t displayChanged = 1;
+    // static char pressed[16] = {};
+    // if (pressed[0] != keypad_get_last_pressed_key()) {
+    //   pressed[0] = keypad_get_last_pressed_key();
+    //   displayChanged = 1;
+    // }
+    // if (displayChanged == 1) {
+    //   displayChanged = 0;
+    //   printf("__________________\r\n");
+    //   lq_clear(&device);
+    //   lq_setCursor(&device, 0, 0);
+    //   lq_print(&device, "Current pressed: ");
+    //   lq_setCursor(&device, 1, 0);
+
+    //   if (pressed[0] != '\0') {
+    //     printf("pressed %s\r\n", pressed);
+    //     lq_print(&device, pressed);
+    //   } else {
+    //     lq_print(&device, "               ");
+    //   }
+    // }
   }
 }
