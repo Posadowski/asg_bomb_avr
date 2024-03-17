@@ -51,12 +51,12 @@ void activateBomb(uint16_t timeToExplode, const char *PassToDefused,
       lq_setCursor(lcd, 0, 0);
       lq_print(lcd, "time left: ");
       char string_time_to_print[LCD_LINE_LENGTH];
-    // Calculating minutes and seconds
-    unsigned int minutes = time_to_explode / 60;
-    unsigned int seconds = time_to_explode % 60;
-    // Format time to mm:ss
-    sprintf(string_time_to_print, "%02u:%02u", minutes, seconds);
-    lq_print(lcd, string_time_to_print);
+      // Calculating minutes and seconds
+      unsigned int minutes = time_to_explode / 60;
+      unsigned int seconds = time_to_explode % 60;
+      // Format time to mm:ss
+      sprintf(string_time_to_print, "%02u:%02u", minutes, seconds);
+      lq_print(lcd, string_time_to_print);
     } else {
       // tone(BUZZER_PIN, NOTE_C6);
       lq_clear(lcd);
@@ -70,7 +70,7 @@ void activateBomb(uint16_t timeToExplode, const char *PassToDefused,
         if (bombMachinery_positionInCommandTable <
             (sizeof(bombMachinery_enteredCommandTable) /
              sizeof(bombMachinery_enteredCommandTable[0]))) {
-          lq_setCursor(lcd, 1,bombMachinery_positionInCommandTable);
+          lq_setCursor(lcd, 1, bombMachinery_positionInCommandTable);
           char print[] = {key_pressed, '\0'};
           lq_print(lcd, print);
           uint8_t i = 0;
@@ -84,10 +84,9 @@ void activateBomb(uint16_t timeToExplode, const char *PassToDefused,
           bombMachinery_enteredCommandTable
               [++bombMachinery_positionInCommandTable] = '\0';
         } else {
-            uint8_t i;
-          for (i = 0;
-               i < (sizeof(bombMachinery_enteredCommandTable) /
-                    sizeof(bombMachinery_enteredCommandTable[0]));
+          uint8_t i;
+          for (i = 0; i < (sizeof(bombMachinery_enteredCommandTable) /
+                           sizeof(bombMachinery_enteredCommandTable[0]));
                i++) {
             bombMachinery_enteredCommandTable[i] = ' ';
           }
@@ -116,7 +115,7 @@ void activateBomb(uint16_t timeToExplode, const char *PassToDefused,
         }
         uint8_t k;
         for (k = 0; k < (sizeof(bombMachinery_enteredCommandTable) /
-                                 sizeof(bombMachinery_enteredCommandTable[0]));
+                         sizeof(bombMachinery_enteredCommandTable[0]));
              k++) {
           bombMachinery_enteredCommandTable[k] = ' ';
         }
@@ -136,10 +135,10 @@ void activateBomb(uint16_t timeToExplode, const char *PassToDefused,
   while (!exited) {
     char key_pressed = keypad_get_last_pressed_key();
     if (old_key_pressed != key_pressed) {
-        if (key_pressed == ENTER_KEY) {
-          lq_clear(lcd);
-          exited = TRUE;
-        }
+      if (key_pressed == ENTER_KEY) {
+        lq_clear(lcd);
+        exited = TRUE;
+      }
       old_key_pressed = key_pressed;
     }
   }

@@ -5,7 +5,7 @@
 
 #include "../lib/lcd/lcd.h"
 
+void activateBomb(uint16_t timeToExplode, const char* PassToDefused,
+                  LiquidCrystalDevice_t* lcd);
 
-void activateBomb(uint16_t timeToExplode,const char* PassToDefused,LiquidCrystalDevice_t* lcd);
-
-#endif //BOMB_MACHINERY_H
+#endif  // BOMB_MACHINERY_H

@@ -10,7 +10,6 @@
 #include "../lib/memory/memory.h"
 #include "../lib/task_machinery/task_machinery.h"
 #include "../lib/usart/usart.h"
-
 #include "bomb_machinery.h"
 #include "settings_menu.h"
 
@@ -150,13 +149,13 @@ int main(void) {
           enteredCommandTable[i] = ' ';
         }
         positionInCommandTable = 0;  // back to end
-      }else if(key_pressed == (char)PRESET_1_KEY){
-        activateBomb(memory.mem_preset1,memory.password,&device);
-      }else if(key_pressed == (char)PRESET_2_KEY){
-        activateBomb(memory.mem_preset2,memory.password,&device);
-      }else if(key_pressed == (char)PRESET_3_KEY){
-        activateBomb(memory.mem_preset3,memory.password,&device);
-      }else if(key_pressed == (char)SETTINGS_ENTER_KEY){
+      } else if (key_pressed == (char)PRESET_1_KEY) {
+        activateBomb(memory.mem_preset1, memory.password, &device);
+      } else if (key_pressed == (char)PRESET_2_KEY) {
+        activateBomb(memory.mem_preset2, memory.password, &device);
+      } else if (key_pressed == (char)PRESET_3_KEY) {
+        activateBomb(memory.mem_preset3, memory.password, &device);
+      } else if (key_pressed == (char)SETTINGS_ENTER_KEY) {
         settings_menu(&device);
       }
     }
