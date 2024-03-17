@@ -11,7 +11,6 @@ enum taskMachinery_error {
 };
 
 typedef struct task_queue {
-  uint16_t taskID;
   uint16_t time_to_execute;  // milliseconds
   struct task_queue *next;
   struct task_queue *prev;
@@ -24,6 +23,5 @@ enum taskMachinery_error taskMachinery_engque(task_queue **head, uint16_t time,
                                               void (*callback)(void *),
                                               void *data);
 
-uint16_t taskMachinery_task_count();
 
 #endif  // TASK_MACHINERY_H_

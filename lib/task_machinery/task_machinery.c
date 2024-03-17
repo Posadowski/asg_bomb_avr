@@ -1,6 +1,5 @@
 #include "task_machinery.h"
 
-uint16_t global_task_id = 0;
 
 enum taskMachinery_error taskMachinery_engque(task_queue **head, uint16_t time,
                                               void (*callback)(void *),
@@ -13,8 +12,6 @@ enum taskMachinery_error taskMachinery_engque(task_queue **head, uint16_t time,
   new_element->time_to_execute = time;
   new_element->callback = callback;
   new_element->data = data;
-
-  new_element->taskID = global_task_id++;
 
   if (*head == NULL || time < (*head)->time_to_execute) {
     // If the queue is empty or the new item has less execution time than the
@@ -41,5 +38,3 @@ enum taskMachinery_error taskMachinery_engque(task_queue **head, uint16_t time,
   new_element->prev = current;
   return TASK_OK;
 }
-
-uint16_t taskMachinery_task_count() { return global_task_id; }
