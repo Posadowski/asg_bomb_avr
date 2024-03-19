@@ -2,11 +2,11 @@
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "../lib/keypad/keypad.h"
 #include "../lib/task_machinery/task_machinery.h"
-#include "../lib/usart/usart.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -14,13 +14,35 @@
 extern task_queue *head;
 uint8_t timerON = FALSE;
 uint16_t time_to_explode = 0;
+uint16_t time_to_explode_start = 0;
+uint8_t bombArmed = FALSE;
+
+void toogle_buzzer_pin(void *arg) {
+  printf("toogle\n");
+  PORTD ^= (1 << BUZZER_PIN);  // toogle Buzzer PIN
+}
 
 void calculate_time_to_explode(void *arg) {
-  if (time_to_explode > 1) {
+  if (time_to_explode > 1 && bombArmed == TRUE) {
     taskMachinery_engque(&head, 1000, calculate_time_to_explode, NULL);
+    uint16_t percent = map(time_to_explode, 0, time_to_explode_start, 0, 100);
+          if (time_to_explode > 10) {
+        if (percent > 80) {
+          taskMachinery_engque(&head, 1000, toogle_buzzer_pin, NULL);
+        } else if (percent > 60) {
+          taskMachinery_engque(&head, 900, toogle_buzzer_pin, NULL);
+        } else if (percent > 40) {
+          taskMachinery_engque(&head, 750, toogle_buzzer_pin, NULL);
+        } else if (percent > 20) {
+          taskMachinery_engque(&head, 500, toogle_buzzer_pin, NULL);
+        }
+      } else {
+        taskMachinery_engque(&head, 250, toogle_buzzer_pin, NULL);
+      }
   } else {
     timerON = FALSE;
     time_to_explode = 0;
+    PORTD &= ~(1 << BUZZER_PIN); // pin buzzer LOW
     return;
   }
   time_to_explode--;
@@ -39,12 +61,13 @@ void activateBomb(uint16_t timeToExplode, const char *PassToDefused,
     lq_print(lcd, "password too long");
     return;
   }
-
+  
   taskMachinery_engque(&head, 1000, calculate_time_to_explode, NULL);
   timerON = TRUE;
 
-  uint8_t bombArmed = TRUE;
+  bombArmed = TRUE;
   uint8_t bombDefused = FALSE;
+  time_to_explode_start = time_to_explode;
 
   while (bombArmed) {
     if (time_to_explode > 1) {
