@@ -28,6 +28,8 @@
 #define PRESET_2_KEY 'B'
 #define PRESET_3_KEY 'C'
 
+#define BATTERY_CHECK_KEY '*'
+
 void keypad_init();
 void keypad_check_key_pressed(void *arg);
 char keypad_get_last_pressed_key();
