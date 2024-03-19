@@ -23,5 +23,6 @@ enum taskMachinery_error taskMachinery_engque(task_queue **head, uint16_t time,
                                               void (*callback)(void *),
                                               void *data);
 
+uint16_t map(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out_min, uint16_t out_max);
 
 #endif  // TASK_MACHINERY_H_
