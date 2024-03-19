@@ -12,6 +12,7 @@
 #include "../lib/usart/usart.h"
 #include "bomb_machinery.h"
 #include "settings_menu.h"
+#include "battery.h"
 
 #define SOFTWARE_VERSION "0.4"  // 0.3 last arduino version
 
@@ -33,6 +34,33 @@ char enteredCommandTable[LCD_LINE_LENGTH];
 
 void queue_test(void *arg) {
   taskMachinery_engque(&head, 5000, queue_test, NULL);
+}
+
+extern unsigned int __heap_start;
+extern void *__brkval;
+
+// Function to calculate free heap size
+int freeHeap() {
+    int free_memory;
+    if ((int)__brkval == 0)
+        free_memory = ((int)&free_memory) - ((int)&__heap_start);
+    else
+        free_memory = ((int)&free_memory) - ((int)__brkval);
+    return free_memory;
+}
+
+void print_task_queue(void *arg) {
+    printf("task queue \n");
+    task_queue *current =  (task_queue *)arg;
+    uint8_t i = 0;
+    while (current != NULL) {
+        printf("%u: Time to execute: %u\n",i, current->time_to_execute);
+        // You can print other members of the task_queue struct here if needed
+        current = current->next;
+        i++;
+    }
+    printf("freeHeap: %d\n",freeHeap());
+    taskMachinery_engque(&head, 5000, print_task_queue, head);
 }
 
 FILE USART_Transmit_stream =
@@ -95,9 +123,11 @@ int main(void) {
   strcat(software_version, SOFTWARE_VERSION);
   lq_print(&device, software_version);
   _delay_ms(1000);
+  
+  ADC_init();
 
   keypad_init();  // define pins in lib/keypad/keypad.h
-  taskMachinery_engque(&head, 5000, queue_test, NULL);
+  taskMachinery_engque(&head, 5000, print_task_queue, NULL);
   taskMachinery_engque(&head, _KEYPAD_CHECK_TIME, keypad_check_key_pressed,
                        NULL);
   init_timer();
@@ -121,6 +151,10 @@ int main(void) {
   }
   lq_clear(&device);
   lq_setCursor(&device, 0, 0);
+
+  DDRD |= (1 << BUZZER_PIN); // set pin buzzer as output
+  PORTD &= ~(1 << BUZZER_PIN); // pin buzzer LOW
+
   while (1) {
     static uint8_t positionInCommandTable = 0;
     static char old_key_pressed = '\0';
@@ -157,6 +191,8 @@ int main(void) {
         activateBomb(memory.mem_preset3, memory.password, &device);
       } else if (key_pressed == (char)SETTINGS_ENTER_KEY) {
         settings_menu(&device);
+      }else if(key_pressed == (char)BATTERY_CHECK_KEY){
+        check_battery(&device);
       }
     }
     old_key_pressed = key_pressed;
