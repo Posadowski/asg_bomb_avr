@@ -10,10 +10,10 @@
 #include "../lib/memory/memory.h"
 #include "../lib/task_machinery/task_machinery.h"
 #include "../lib/usart/usart.h"
+#include "battery.h"
 #include "bomb_machinery.h"
 #include "settings_menu.h"
-#include "battery.h"
-
+#include "tone.h"
 #define SOFTWARE_VERSION "0.4"  // 0.3 last arduino version
 
 #ifdef F_CPU
@@ -41,26 +41,26 @@ extern void *__brkval;
 
 // Function to calculate free heap size
 int freeHeap() {
-    int free_memory;
-    if ((int)__brkval == 0)
-        free_memory = ((int)&free_memory) - ((int)&__heap_start);
-    else
-        free_memory = ((int)&free_memory) - ((int)__brkval);
-    return free_memory;
+  int free_memory;
+  if ((int)__brkval == 0)
+    free_memory = ((int)&free_memory) - ((int)&__heap_start);
+  else
+    free_memory = ((int)&free_memory) - ((int)__brkval);
+  return free_memory;
 }
 
 void print_task_queue(void *arg) {
-    printf("task queue \n");
-    task_queue *current =  (task_queue *)arg;
-    uint8_t i = 0;
-    while (current != NULL) {
-        printf("%u: Time to execute: %u\n",i, current->time_to_execute);
-        // You can print other members of the task_queue struct here if needed
-        current = current->next;
-        i++;
-    }
-    printf("freeHeap: %d\n",freeHeap());
-    taskMachinery_engque(&head, 5000, print_task_queue, head);
+  printf("task queue \n");
+  task_queue *current = (task_queue *)arg;
+  uint8_t i = 0;
+  while (current != NULL) {
+    printf("%u: Time to execute: %u\n", i, current->time_to_execute);
+    // You can print other members of the task_queue struct here if needed
+    current = current->next;
+    i++;
+  }
+  printf("freeHeap: %d\n", freeHeap());
+  taskMachinery_engque(&head, 5000, print_task_queue, head);
 }
 
 FILE USART_Transmit_stream =
@@ -100,9 +100,131 @@ void init_timer() {
   sei();                                // turn on intterupt
 }
 
+void setupPWM() {
+  DDRD |= (1 << BUZZER_PIN);
+  OCR2A = 51;     // defines the frequency 51 = 38.4 KHz, 54 = 36.2 KHz, 58 = 34 KHz, 62 = 32 KHz
+  OCR2B = 127;     // defines the duty cycle - Half the OCR2A value for 50%
+  TCCR2A = _BV(COM2B1) | _BV(WGM21) | _BV(WGM20);   // COM2B1 (output to OC2B) ; WGMode 7 Fast PWM (part 1)
+  TCCR2B = _BV(WGM22)  | _BV(CS21);                 // prescalere x8 ;  WGMode 7 Fast PWM (part 1)
+}
+
+void disablePWM() {
+  // Stop Timer2 (which was set up for PWM generation)
+  TCCR2A = 0;
+  TCCR2B = 0;
+}
+
+void playSound(int frequency) {
+  printf("---------------------------\n");
+  uint8_t prescalarbits = 0b001;
+  uint32_t ocr = 0;
+  
+  /*
+  CS22  CS21 CS20 | prescaler select
+  0      0     0  |  No clock source
+  0      0     1  |  Clk(T2S)/No prescaler
+  0      1     0  |  Clk(T2S)/8
+  0      1     1  |  Clk(T2S)/32
+  1      0     0  |  Clk(T2S)/64
+  1      0     1  |  Clk(T2S)/128
+  1      1     0  |  Clk(T2S)/256
+  1      1     1  |  Clk(T2S)/1024
+  */
+
+  ocr = F_CPU / frequency / 2 - 1;
+  if (ocr > 255) {
+    ocr = F_CPU / frequency / 2 / 8 - 1;
+    prescalarbits = 0b010;
+    if (ocr > 255) {
+      ocr = F_CPU / frequency / 2 / 32 - 1;
+      prescalarbits = 0b011;
+      if (ocr > 255) {
+        ocr = F_CPU / frequency / 2 / 128 - 1;
+        prescalarbits = 0b101;
+
+        if (ocr > 255) {
+          ocr = F_CPU / frequency / 2 / 256 - 1;
+          prescalarbits = 0b110;
+          if (ocr > 255) {
+            // can't do any better than /1024
+            ocr = F_CPU / frequency / 2 / 1024 - 1;
+            prescalarbits = 0b111;
+          }
+        }
+      }
+    }
+  }
+  printf("TCCR2B: %d\n", TCCR2B);
+
+  TCCR2B = (TCCR2B & 0b11111000) | prescalarbits;
+  printf("TCCR2B: %d\n", TCCR2B);
+  OCR2A = ocr;
+  printf("OCR2A: %d\n", OCR2A);
+  OCR2B = 110;
+}
+
 void papaj_event() {
-  // TODO
-  printf("JP2GMD\n");
+  cli();
+  setupPWM();
+  OCR2B = 0;
+  _delay_ms(1500);
+    playSound(NOTE_C4);
+
+    _delay_ms(1500);
+
+    playSound(NOTE_A3);
+    _delay_ms(1000);
+    OCR2B = 0;
+    _delay_ms(50);
+    playSound(NOTE_A4);
+    _delay_ms(1000);
+    OCR2B = 0;
+    _delay_ms(50);
+    playSound(NOTE_A4);
+    _delay_ms(700);
+    playSound(NOTE_B4);
+    _delay_ms(700);
+    playSound(NOTE_C4);
+    _delay_ms(700);
+    playSound(NOTE_B4);
+    _delay_ms(700);
+    playSound(NOTE_A4);
+    _delay_ms(1000);
+    ///
+    playSound(NOTE_G4);
+    _delay_ms(1000);
+    OCR2B = 0;
+    _delay_ms(500);
+    playSound(NOTE_F4);
+    _delay_ms(1000);
+    playSound(NOTE_E4);
+    _delay_ms(700);
+    playSound(NOTE_F4);
+    _delay_ms(1000);
+    OCR2B = 0;
+    playSound(NOTE_F4);
+    _delay_ms(1000);
+    OCR2B = 0;
+    playSound(NOTE_F4);
+    _delay_ms(1000);
+    playSound(NOTE_G4);
+    _delay_ms(1000);
+    playSound(NOTE_A4);
+    _delay_ms(1000);
+    playSound(NOTE_G4);
+    _delay_ms(1000);
+    playSound(NOTE_F4);
+    _delay_ms(1000);
+    playSound(NOTE_E4);
+    _delay_ms(700);
+    OCR2B = 0;
+    playSound(NOTE_E4);
+    _delay_ms(700);
+
+    disablePWM();
+  
+  PORTD &= ~(1 << BUZZER_PIN);  // pin buzzer LOW
+  sei();
 }
 
 int main(void) {
@@ -123,7 +245,7 @@ int main(void) {
   strcat(software_version, SOFTWARE_VERSION);
   lq_print(&device, software_version);
   _delay_ms(1000);
-  
+
   ADC_init();
 
   keypad_init();  // define pins in lib/keypad/keypad.h
@@ -152,10 +274,11 @@ int main(void) {
   lq_clear(&device);
   lq_setCursor(&device, 0, 0);
 
-  DDRD |= (1 << BUZZER_PIN); // set pin buzzer as output
-  PORTD &= ~(1 << BUZZER_PIN); // pin buzzer LOW
+  // DDRD |= (1 << BUZZER_PIN); // set pin buzzer as output
+  // PORTD &= ~(1 << BUZZER_PIN); // pin buzzer LOW
 
   while (1) {
+    PORTD &= ~(1 << BUZZER_PIN);  // pin buzzer LOW
     static uint8_t positionInCommandTable = 0;
     static char old_key_pressed = '\0';
     char key_pressed = keypad_get_last_pressed_key();
@@ -191,7 +314,7 @@ int main(void) {
         activateBomb(memory.mem_preset3, memory.password, &device);
       } else if (key_pressed == (char)SETTINGS_ENTER_KEY) {
         settings_menu(&device);
-      }else if(key_pressed == (char)BATTERY_CHECK_KEY){
+      } else if (key_pressed == (char)BATTERY_CHECK_KEY) {
         check_battery(&device);
       }
     }
