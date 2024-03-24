@@ -245,7 +245,7 @@ void settings_menu(LiquidCrystalDevice_t *lcd) {
             if (newValueToSet == FALSE) {
               lq_clear(lcd);
               lq_setCursor(lcd, 0, 0);
-              lq_print(lcd, "Insert volume[%%]");
+              lq_print(lcd, "Insert volume[%]");
               newValueToSet = TRUE;
             } else {
               uint16_t instert_value = atoi(settings_enteredCommandTable);

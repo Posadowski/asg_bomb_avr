@@ -268,7 +268,7 @@ int main(void) {
    DDRD |= (1 << BUZZER_PIN); // set pin buzzer as output
   // PORTD &= ~(1 << BUZZER_PIN); // pin buzzer LOW
   while (1) {
-    PORTD &= ~(1 << BUZZER_PIN);  // pin buzzer LOW
+    disablePWM();
     static uint8_t positionInCommandTable = 0;
     static char old_key_pressed = '\0';
     char key_pressed = keypad_get_last_pressed_key();
