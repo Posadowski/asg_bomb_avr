@@ -163,6 +163,7 @@ void activateBomb(uint16_t timeToExplode, const char *PassToDefused,
     lq_clear(lcd);
     lq_setCursor(lcd, 0, 0);
     lq_print(lcd, "Bomb defused :D");
+    disablePWM();
   }
   uint8_t exited = FALSE;
   while (!exited) {
