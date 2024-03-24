@@ -18,9 +18,9 @@
 //#define DEVELOP_VERSION
 
 #ifdef DEVELOP_VERSION
-#define SOFTWARE_VERSION "0.5 DEV"  // 0.3 last arduino version
+#define SOFTWARE_VERSION "0.6 DEV"  // 0.3 last arduino version
 #else
-#define SOFTWARE_VERSION "0.5"  // 0.3 last arduino version
+#define SOFTWARE_VERSION "0.6"  // 0.3 last arduino version
 #endif
 
 #ifdef F_CPU
