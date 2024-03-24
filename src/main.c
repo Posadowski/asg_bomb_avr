@@ -14,11 +14,20 @@
 #include "bomb_machinery.h"
 #include "settings_menu.h"
 #include "tone.h"
-#define SOFTWARE_VERSION "0.4"  // 0.3 last arduino version
+
+//#define DEVELOP_VERSION
+
+#ifdef DEVELOP_VERSION
+#define SOFTWARE_VERSION "0.5 DEV"  // 0.3 last arduino version
+#else
+#define SOFTWARE_VERSION "0.5"  // 0.3 last arduino version
+#endif
 
 #ifdef F_CPU
 #undef F_CPU
 #endif
+
+
 
 #define F_CPU 16000000UL
 #define TIMER1_PRESCALER 1024
@@ -49,6 +58,7 @@ int freeHeap() {
   return free_memory;
 }
 
+#ifdef DEVELOP_VERSION
 void print_task_queue(void *arg) {
   printf("task queue \n");
   task_queue *current = (task_queue *)arg;
@@ -62,6 +72,7 @@ void print_task_queue(void *arg) {
   printf("freeHeap: %d\n", freeHeap());
   taskMachinery_engque(&head, 5000, print_task_queue, head);
 }
+#endif
 
 FILE USART_Transmit_stream =
     FDEV_SETUP_STREAM(USART_Transmit_printf, NULL, _FDEV_SETUP_WRITE);
@@ -100,23 +111,7 @@ void init_timer() {
   sei();                                // turn on intterupt
 }
 
-void setupPWM() {
-  DDRD |= (1 << BUZZER_PIN);
-  OCR2A = 0;     // reset the frequency 
-  OCR2B = 0;     // defines the duty cycle
-  TCCR2A = (1 << COM2B1) | (1 << WGM21) | (1 << WGM20);   // COM2B1 (output to OC2B) ; WGMode 7 Fast PWM (part 1)
-  TCCR2B = (1 << WGM22)  | (1 << CS21);                 // prescalere x8 ;  WGMode 7 Fast PWM (part 1)
-  PORTD &= ~(1 << BUZZER_PIN);
-}
-
-void disablePWM() {
-  // Stop Timer2 (which was set up for PWM generation)
-  TCCR2A = 0;
-  TCCR2B = 0;
-}
-
 void playSound(int frequency) {
-  printf("---------------------------\n");
   uint8_t prescalarbits = 0b001;
   uint32_t ocr = 0;
   
@@ -155,12 +150,10 @@ void playSound(int frequency) {
       }
     }
   }
-  printf("TCCR2B: %d\n", TCCR2B);
 
   TCCR2B = (TCCR2B & 0b11111000) | prescalarbits;
-  printf("TCCR2B: %d\n", TCCR2B);
+
   OCR2A = ocr;
-  printf("OCR2A: %d\n", OCR2A);
   OCR2B = 110;
 }
 
@@ -249,32 +242,34 @@ int main(void) {
   ADC_init();
 
   keypad_init();  // define pins in lib/keypad/keypad.h
+  #ifdef DEVELOP_VERSION
   taskMachinery_engque(&head, 5000, print_task_queue, NULL);
+  #endif
   taskMachinery_engque(&head, _KEYPAD_CHECK_TIME, keypad_check_key_pressed,
                        NULL);
   init_timer();
 
   read_data_from_flash(&memory);
+ 
   if (memory.mem_init == 0) {
-    printf("MEMORY INIT\r\n");
+    // MEMORY INIT
     memory.mem_preset1 = 10;
     memory.mem_preset2 = 15;
     memory.mem_preset3 = 20;
+    memory.mem_volume = 100;
     strcpy(memory.password, "1234");
 
     memory.mem_init = 1;
     write_data_to_flash(&memory);
   } else {
-    printf("Memory read\r\n");
-    printf("preset1 %u\r\n", memory.mem_preset1);
-    printf("preset2 %u\r\n", memory.mem_preset2);
-    printf("preset3 %u\r\n", memory.mem_preset3);
-    printf("password %s\r\n", memory.password);
+    printf("memory.mem_volume: %d\n",memory.mem_volume);
+    printf("memory.password: %s\n",memory.password);
+
   }
   lq_clear(&device);
   lq_setCursor(&device, 0, 0);
 
-  // DDRD |= (1 << BUZZER_PIN); // set pin buzzer as output
+   DDRD |= (1 << BUZZER_PIN); // set pin buzzer as output
   // PORTD &= ~(1 << BUZZER_PIN); // pin buzzer LOW
   while (1) {
     PORTD &= ~(1 << BUZZER_PIN);  // pin buzzer LOW
@@ -318,26 +313,5 @@ int main(void) {
       }
     }
     old_key_pressed = key_pressed;
-    // static uint8_t displayChanged = 1;
-    // static char pressed[16] = {};
-    // if (pressed[0] != keypad_get_last_pressed_key()) {
-    //   pressed[0] = keypad_get_last_pressed_key();
-    //   displayChanged = 1;
-    // }
-    // if (displayChanged == 1) {
-    //   displayChanged = 0;
-    //   printf("__________________\r\n");
-    //   lq_clear(&device);
-    //   lq_setCursor(&device, 0, 0);
-    //   lq_print(&device, "Current pressed: ");
-    //   lq_setCursor(&device, 1, 0);
-
-    //   if (pressed[0] != '\0') {
-    //     printf("pressed %s\r\n", pressed);
-    //     lq_print(&device, pressed);
-    //   } else {
-    //     lq_print(&device, "               ");
-    //   }
-    // }
   }
 }
