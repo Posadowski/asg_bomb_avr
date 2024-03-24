@@ -261,10 +261,6 @@ int main(void) {
 
     memory.mem_init = 1;
     write_data_to_flash(&memory);
-  } else {
-    printf("memory.mem_volume: %d\n",memory.mem_volume);
-    printf("memory.password: %s\n",memory.password);
-
   }
   lq_clear(&device);
   lq_setCursor(&device, 0, 0);
