@@ -29,28 +29,28 @@ void keypad_check_key_pressed(void *arg) {
   for (int col = 0; col < 4; col++) {
     switch (col) {
       case 0:
-        C1_PORT &= ~(1 << C1_PIN);
-        C2_PORT |= (1 << C2_PIN);
-        C3_PORT |= (1 << C3_PIN);
-        C4_PORT |= (1 << C4_PIN);
+        PORTB &= ~(1 << C1_PIN);
+        PORTD |= (1 << C2_PIN);
+        PORTD |= (1 << C3_PIN);
+        PORTD |= (1 << C4_PIN);
         break;
       case 1:
-        C1_PORT |= (1 << C1_PIN);
-        C2_PORT &= ~(1 << C2_PIN);
-        C3_PORT |= (1 << C3_PIN);
-        C4_PORT |= (1 << C4_PIN);
+        PORTB |= (1 << C1_PIN);
+        PORTD &= ~(1 << C2_PIN);
+        PORTD |= (1 << C3_PIN);
+        PORTD |= (1 << C4_PIN);
         break;
       case 2:
-        C1_PORT |= (1 << C1_PIN);
-        C2_PORT |= (1 << C2_PIN);
-        C3_PORT &= ~(1 << C3_PIN);
-        C4_PORT |= (1 << C4_PIN);
+        PORTB |= (1 << C1_PIN);
+        PORTD |= (1 << C2_PIN);
+        PORTD &= ~(1 << C3_PIN);
+        PORTD |= (1 << C4_PIN);
         break;
       case 3:
-        C1_PORT |= (1 << C1_PIN);
-        C2_PORT |= (1 << C2_PIN);
-        C3_PORT |= (1 << C3_PIN);
-        C4_PORT &= ~(1 << C4_PIN);
+        PORTB |= (1 << C1_PIN);
+        PORTD |= (1 << C2_PIN);
+        PORTD |= (1 << C3_PIN);
+        PORTD &= ~(1 << C4_PIN);
         break;
     }
 
