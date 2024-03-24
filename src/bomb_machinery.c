@@ -7,6 +7,7 @@
 
 #include "../lib/keypad/keypad.h"
 #include "../lib/task_machinery/task_machinery.h"
+#include "settings_menu.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -17,32 +18,42 @@ uint16_t time_to_explode = 0;
 uint16_t time_to_explode_start = 0;
 uint8_t bombArmed = FALSE;
 
+#define VOLUME_PWM_DUTY_MAX 127
+#define VOLUME_PWM_DUTY_MIN 0
+
 void toogle_buzzer_pin(void *arg) {
-  printf("toogle\n");
-  PORTD ^= (1 << BUZZER_PIN);  // toogle Buzzer PIN
+  if (OCR2B != 0) {
+    OCR2B = 0;
+    disablePWM();
+  } else {
+    setupPWM();
+    printf("OCR2B: %d\n",OCR2B);                
+  }
+  if (time_to_explode > 1 && bombArmed == TRUE) {
+    uint16_t percent = map(time_to_explode, 0, time_to_explode_start, 0, 100);
+    if (time_to_explode > 10) {
+      if (percent > 80) {
+        taskMachinery_engque(&head, 1000, toogle_buzzer_pin, NULL);
+      } else if (percent > 60) {
+        taskMachinery_engque(&head, 750, toogle_buzzer_pin, NULL);
+      } else if (percent > 40) {
+        taskMachinery_engque(&head, 500, toogle_buzzer_pin, NULL);
+      } else if (percent > 20) {
+        taskMachinery_engque(&head, 250, toogle_buzzer_pin, NULL);
+      }
+    } else {
+      taskMachinery_engque(&head, 100, toogle_buzzer_pin, NULL);
+    }
+  }
 }
 
 void calculate_time_to_explode(void *arg) {
   if (time_to_explode > 1 && bombArmed == TRUE) {
     taskMachinery_engque(&head, 1000, calculate_time_to_explode, NULL);
-    uint16_t percent = map(time_to_explode, 0, time_to_explode_start, 0, 100);
-          if (time_to_explode > 10) {
-        if (percent > 80) {
-          taskMachinery_engque(&head, 1000, toogle_buzzer_pin, NULL);
-        } else if (percent > 60) {
-          taskMachinery_engque(&head, 900, toogle_buzzer_pin, NULL);
-        } else if (percent > 40) {
-          taskMachinery_engque(&head, 750, toogle_buzzer_pin, NULL);
-        } else if (percent > 20) {
-          taskMachinery_engque(&head, 500, toogle_buzzer_pin, NULL);
-        }
-      } else {
-        taskMachinery_engque(&head, 250, toogle_buzzer_pin, NULL);
-      }
   } else {
     timerON = FALSE;
     time_to_explode = 0;
-    PORTD &= ~(1 << BUZZER_PIN); // pin buzzer LOW
+    PORTD &= ~(1 << BUZZER_PIN);  // pin buzzer LOW
     return;
   }
   time_to_explode--;
@@ -61,8 +72,10 @@ void activateBomb(uint16_t timeToExplode, const char *PassToDefused,
     lq_print(lcd, "password too long");
     return;
   }
-  
+
   taskMachinery_engque(&head, 1000, calculate_time_to_explode, NULL);
+  setupPWM();
+  taskMachinery_engque(&head, 1000, toogle_buzzer_pin, NULL);
   timerON = TRUE;
 
   bombArmed = TRUE;
@@ -81,7 +94,6 @@ void activateBomb(uint16_t timeToExplode, const char *PassToDefused,
       sprintf(string_time_to_print, "%02u:%02u", minutes, seconds);
       lq_print(lcd, string_time_to_print);
     } else {
-      // tone(BUZZER_PIN, NOTE_C6);
       lq_clear(lcd);
       lq_setCursor(lcd, 0, 0);
       lq_print(lcd, "BOOOOM!!!!");
@@ -149,7 +161,6 @@ void activateBomb(uint16_t timeToExplode, const char *PassToDefused,
     old_key_pressed = key_pressed;
   }
   if (bombDefused) {
-    // noTone(BUZZER_PIN);
     lq_clear(lcd);
     lq_setCursor(lcd, 0, 0);
     lq_print(lcd, "Bomb defused :D");
@@ -161,8 +172,32 @@ void activateBomb(uint16_t timeToExplode, const char *PassToDefused,
       if (key_pressed == ENTER_KEY) {
         lq_clear(lcd);
         exited = TRUE;
+        disablePWM();
       }
       old_key_pressed = key_pressed;
     }
   }
+}
+
+void setupPWM() {
+  uint16_t volume = settings_volume_get();
+  if(volume > 0){
+  DDRD |= (1 << BUZZER_PIN);
+  OCR2A = 0;  // reset the frequency
+  OCR2B = map(settings_volume_get(), 0, 100, VOLUME_PWM_DUTY_MIN,
+              VOLUME_PWM_DUTY_MAX);  // defines the duty cycle
+  TCCR2A =
+      (1 << COM2B1) | (1 << WGM21) |
+      (1 << WGM20);  // COM2B1 (output to OC2B) ; WGMode 7 Fast PWM (part 1)
+  TCCR2B = (1 << WGM22) |
+           (1 << CS21);  // prescalere x8 ;  WGMode 7 Fast PWM (part 1)
+  //PORTD &= ~(1 << BUZZER_PIN);
+  }
+}
+
+void disablePWM() {
+  // Stop Timer2 (which was set up for PWM generation)
+  TCCR2A = 0;
+  TCCR2B = 0;
+  PORTD &= ~(1 << BUZZER_PIN);  // pin buzzer LOW
 }

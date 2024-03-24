@@ -23,4 +23,7 @@ uint16_t settings_preset2_get();
 uint16_t settings_preset3_set(uint16_t preset3_new_value);
 uint16_t settings_preset3_get();
 
+uint16_t settings_volume_set(uint16_t volume_new_value);
+uint16_t settings_volume_get();
+
 #endif  // SETTINGS_MENU

@@ -10,4 +10,8 @@
 void activateBomb(uint16_t timeToExplode, const char* PassToDefused,
                   LiquidCrystalDevice_t* lcd);
 
+
+void setupPWM();
+void disablePWM();         
+
 #endif  // BOMB_MACHINERY_H

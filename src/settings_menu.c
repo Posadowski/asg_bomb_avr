@@ -6,13 +6,17 @@
 #include "../lib/keypad/keypad.h"
 #include "../lib/usart/usart.h"
 
+#define AVALIABLE_SETTINGS_OPTIONS 6
+
 #define PASSWORD_LINE "Change pass\0"
 
 #define PRESET1_LINE "Change set1\0"
 #define PRESET2_LINE "Change set2\0"
 #define PRESET3_LINE "Change set3\0"
+#define VOLUME_LINE "Change volume\0"
 #define RESET_LINE "Factory Reset\0"
 #define RETURN_LINE "Return\0"
+#define CLEAR_LINE " \0"
 
 #define ERROR_TOO_LONG UINT16_MAX
 
@@ -22,6 +26,7 @@ enum {
   SELECTED_CHANGE_PRESET1,
   SELECTED_CHANGE_PRESET2,
   SELECTED_CHANGE_PRESET3,
+  SELECTED_CHANGE_VOLUME,
   SELECTED_FACTORY_RESET,
   SELECTED_RETURN,
   SELECTED_MAX
@@ -32,11 +37,6 @@ enum {
 
 extern mem_data memory;
 
-int8_t settings_init_done;
-uint16_t preset1;
-uint16_t preset2;
-uint16_t preset3;
-
 char password[MAX_PASSWORD_LENGTH];
 
 void (*resetFunc)(void) = 0;
@@ -46,10 +46,10 @@ int atoi(const char *str) {
   int sign = 1;
   int i = 0;
 
-  // Pomijanie białych znaków
+  // Skipping whitespace
   while (str[i] == ' ' || str[i] == '\t' || str[i] == '\n') i++;
 
-  // Obsługa znaku
+  // char handling
   if (str[i] == '-') {
     sign = -1;
     i++;
@@ -57,7 +57,7 @@ int atoi(const char *str) {
     i++;
   }
 
-  // Konwersja cyfr do liczby całkowitej
+  // Convert digits to integer
   while (str[i] >= '0' && str[i] <= '9') {
     result = result * 10 + (str[i] - '0');
     i++;
@@ -100,15 +100,20 @@ void settings_menu(LiquidCrystalDevice_t *lcd) {
         strcpy(secondLine, PRESET3_LINE);
         strcat(secondLine, char_asterix);
         break;
-      case SELECTED_FACTORY_RESET:
-        strcpy(firstLine, RESET_LINE);
-        strcpy(secondLine, RETURN_LINE);
+      case SELECTED_CHANGE_VOLUME:
+        strcpy(firstLine, VOLUME_LINE);
+        strcpy(secondLine, RESET_LINE);
         strcat(firstLine, char_asterix);
         break;
-      case SELECTED_RETURN:
-        strcpy(firstLine, RESET_LINE);
-        strcpy(secondLine, RETURN_LINE);
+      case SELECTED_FACTORY_RESET:
+        strcpy(firstLine, VOLUME_LINE);
+        strcpy(secondLine, RESET_LINE);
         strcat(secondLine, char_asterix);
+        break;
+      case SELECTED_RETURN:
+        strcpy(firstLine, RETURN_LINE);
+        strcpy(secondLine, CLEAR_LINE);
+        strcat(firstLine, char_asterix);
         break;
       default:
         printf("ERROR, positon_in_settings_menu out of range\n");
@@ -236,7 +241,30 @@ void settings_menu(LiquidCrystalDevice_t *lcd) {
               settings_positionInCommandTable = 0;  // back to start
             }
             break;
-          case SELECTED_CHANGE_PRESET3:
+          case SELECTED_CHANGE_VOLUME:
+            if (newValueToSet == FALSE) {
+              lq_clear(lcd);
+              lq_setCursor(lcd, 0, 0);
+              lq_print(lcd, "Insert volume[%%]");
+              newValueToSet = TRUE;
+            } else {
+              uint16_t instert_value = atoi(settings_enteredCommandTable);
+              if(instert_value<=100 ){
+                if (strlen(settings_enteredCommandTable) < 3) {
+                  settings_volume_set(atoi(settings_enteredCommandTable));
+                } 
+              }else {
+                  lq_clear(lcd);
+                  lq_setCursor(lcd, 0, 0);
+                  lq_print(lcd, "select from 0 to 100");
+                  _delay_ms(500);
+                }
+              newValueToSet = FALSE;
+              screenChanged = TRUE;                 // need to reload screen
+              settings_positionInCommandTable = 0;  // back to start
+            }
+            break;
+            case SELECTED_CHANGE_PRESET3:
             if (newValueToSet == FALSE) {
               lq_clear(lcd);
               lq_setCursor(lcd, 0, 0);
@@ -267,8 +295,8 @@ void settings_menu(LiquidCrystalDevice_t *lcd) {
         }
         screenChanged = TRUE;
       } else if (key_pressed == (char)SETTINGS_DOWN_KEY) {
-        if (positon_in_settings_menu >= 5) {
-          positon_in_settings_menu = 5;
+        if (positon_in_settings_menu >= AVALIABLE_SETTINGS_OPTIONS) {
+          positon_in_settings_menu = AVALIABLE_SETTINGS_OPTIONS;
         } else {
           positon_in_settings_menu++;
         }
@@ -298,6 +326,8 @@ void settings_menu(LiquidCrystalDevice_t *lcd) {
   }
 }
 
+
+
 char *settings_password_set(char *password_new_value) {
   if (strlen(password_new_value) > MAX_PASSWORD_LENGTH - 1) {
     return "password too long";
@@ -311,11 +341,24 @@ char *settings_password_get() {
   return memory.password;
 }
 
+uint16_t settings_volume_set(uint16_t volume_new_value){
+  if(volume_new_value > 100){
+    return ERROR_TOO_LONG;
+  }
+  memory.mem_volume = volume_new_value;
+  write_data_to_flash(&memory);
+  return volume_new_value;
+}
+
+uint16_t settings_volume_get(){
+  read_data_from_flash(&memory);
+  return memory.mem_volume;
+}
+
 uint16_t settings_preset1_set(uint16_t preset1_new_value) {
   if (preset1_new_value >= UINT16_MAX - 1) {
     return ERROR_TOO_LONG;
   }
-  preset1 = preset1_new_value;
   memory.mem_preset1 = preset1_new_value;
   write_data_to_flash(&memory);
   return preset1_new_value;
@@ -347,6 +390,7 @@ uint16_t settings_preset3_set(uint16_t preset3_new_value) {
   write_data_to_flash(&memory);
   return preset3_new_value;
 }
+
 uint16_t settings_preset3_get() {
   read_data_from_flash(&memory);
   return memory.mem_preset3;
