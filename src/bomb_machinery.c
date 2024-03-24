@@ -26,8 +26,7 @@ void toogle_buzzer_pin(void *arg) {
     OCR2B = 0;
     disablePWM();
   } else {
-    setupPWM();
-    printf("OCR2B: %d\n",OCR2B);                
+    setupPWM();            
   }
   if (time_to_explode > 1 && bombArmed == TRUE) {
     uint16_t percent = map(time_to_explode, 0, time_to_explode_start, 0, 100);
