@@ -102,10 +102,11 @@ void init_timer() {
 
 void setupPWM() {
   DDRD |= (1 << BUZZER_PIN);
-  OCR2A = 51;     // defines the frequency 51 = 38.4 KHz, 54 = 36.2 KHz, 58 = 34 KHz, 62 = 32 KHz
-  OCR2B = 127;     // defines the duty cycle - Half the OCR2A value for 50%
-  TCCR2A = _BV(COM2B1) | _BV(WGM21) | _BV(WGM20);   // COM2B1 (output to OC2B) ; WGMode 7 Fast PWM (part 1)
-  TCCR2B = _BV(WGM22)  | _BV(CS21);                 // prescalere x8 ;  WGMode 7 Fast PWM (part 1)
+  OCR2A = 0;     // reset the frequency 
+  OCR2B = 0;     // defines the duty cycle
+  TCCR2A = (1 << COM2B1) | (1 << WGM21) | (1 << WGM20);   // COM2B1 (output to OC2B) ; WGMode 7 Fast PWM (part 1)
+  TCCR2B = (1 << WGM22)  | (1 << CS21);                 // prescalere x8 ;  WGMode 7 Fast PWM (part 1)
+  PORTD &= ~(1 << BUZZER_PIN);
 }
 
 void disablePWM() {
@@ -167,12 +168,11 @@ void papaj_event() {
   cli();
   setupPWM();
   OCR2B = 0;
-  _delay_ms(1500);
     playSound(NOTE_C4);
 
     _delay_ms(1500);
 
-    playSound(NOTE_A3);
+    playSound(NOTE_A4);
     _delay_ms(1000);
     OCR2B = 0;
     _delay_ms(50);
@@ -206,20 +206,20 @@ void papaj_event() {
     _delay_ms(1000);
     OCR2B = 0;
     playSound(NOTE_F4);
-    _delay_ms(1000);
-    playSound(NOTE_G4);
-    _delay_ms(1000);
-    playSound(NOTE_A4);
-    _delay_ms(1000);
-    playSound(NOTE_G4);
-    _delay_ms(1000);
-    playSound(NOTE_F4);
-    _delay_ms(1000);
-    playSound(NOTE_E4);
     _delay_ms(700);
+    playSound(NOTE_G4);
+    _delay_ms(700);
+    playSound(NOTE_A4);
+    _delay_ms(700);
+    playSound(NOTE_G4);
+    _delay_ms(700);
+    playSound(NOTE_F4);
+    _delay_ms(700);
+    playSound(NOTE_E4);
+    _delay_ms(500);
     OCR2B = 0;
     playSound(NOTE_E4);
-    _delay_ms(700);
+    _delay_ms(500);
 
     disablePWM();
   
@@ -276,7 +276,6 @@ int main(void) {
 
   // DDRD |= (1 << BUZZER_PIN); // set pin buzzer as output
   // PORTD &= ~(1 << BUZZER_PIN); // pin buzzer LOW
-
   while (1) {
     PORTD &= ~(1 << BUZZER_PIN);  // pin buzzer LOW
     static uint8_t positionInCommandTable = 0;
