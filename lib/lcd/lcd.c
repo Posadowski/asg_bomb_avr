@@ -6,7 +6,7 @@
 
 LiquidCrystalDevice_t lq_init(uint8_t address, uint8_t columns, uint8_t rows,
                               uint8_t dotSize) {
-  cli();  // turn off  interrupts
+ 
 
   LiquidCrystalDevice_t device;
 
@@ -34,7 +34,7 @@ LiquidCrystalDevice_t lq_init(uint8_t address, uint8_t columns, uint8_t rows,
   // before sending commands. Arduino can turn on way befer 4.5V so we'll wait
   // 50
   _delay_ms(100);
-
+ 
   // Now we pull both RS and R/W low to begin commands
   lq_transmitI2C(
       &device,
@@ -74,51 +74,51 @@ LiquidCrystalDevice_t lq_init(uint8_t address, uint8_t columns, uint8_t rows,
 
   lq_returnHome(&device);
 
-  sei();  // turn on interrupts
+ 
   return device;
 };
 
 void lq_print(struct LiquidCrystalDevice_t *device, char *value) {
-  cli();  // turn off  interrupts
+ 
   char letter = *value;
 
   while (letter != 0x00) {
     lq_writeDeviceByte(device, letter, LCD_REGISTER_SELECT_BIT);
     letter = *(++value);
   }
-  sei();  // turn on interrupts
+ 
 };
 
 void lq_turnOnBacklight(struct LiquidCrystalDevice_t *device) {
-  cli();  // turn off  interrupts
+ 
   device->Backlight = LCD_BACKLIGHT;
   lq_transmitI2C(device, 0);
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_turnOffBacklight(struct LiquidCrystalDevice_t *device) {
-  cli();  // turn off  interrupts
+ 
   device->Backlight = LCD_NOBACKLIGHT;
   lq_transmitI2C(device, 0);
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_clear(LiquidCrystalDevice_t *device) {
-  cli();  // turn off  interrupts
+ 
   lq_sendCommand(
       device, LCD_CLEARDISPLAY);  // clear display, set cursor position to zero
   _delay_us(2000);                // this command takes a long time!
 
   lq_setCursor(device, 0, 0);
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_setCursor(LiquidCrystalDevice_t *device, uint8_t row, uint8_t column) {
-  cli();  // turn off  interrupts
+ 
   uint8_t row_offsets[] = {0x00, 0x40, 0x14, 0x54};
 
   lq_sendCommand(device, LCD_SETDDRAMADDR | (column + row_offsets[row]));
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_returnHome(LiquidCrystalDevice_t *device) {
@@ -129,90 +129,90 @@ void lq_returnHome(LiquidCrystalDevice_t *device) {
 };
 
 void lq_turnOnDisplay(LiquidCrystalDevice_t *device) {
-  cli();  // turn off  interrupts
+ 
   device->DisplayControl |= LCD_DISPLAYON;
   lq_sendCommand(device, LCD_DISPLAYCONTROL | device->DisplayControl);
-  sei();  // turn on interrupts
+ 
 };
 
 void lq_turnOffDisplay(LiquidCrystalDevice_t *device) {
-  cli();  // turn off  interrupts
+ 
   device->DisplayControl &= ~LCD_DISPLAYON;
   lq_sendCommand(device, LCD_DISPLAYCONTROL | device->DisplayControl);
-  sei();  // turn on interrupts
+ 
 };
 
 void lq_turnOnCursor(struct LiquidCrystalDevice_t *device) {
-  cli();  // turn off  interrupts
+ 
   device->DisplayControl |= LCD_CURSORON;
   lq_sendCommand(device, LCD_DISPLAYCONTROL | device->DisplayControl);
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_turnOffCursor(struct LiquidCrystalDevice_t *device) {
-  cli();  // turn off  interrupts
+ 
   device->DisplayControl &= ~LCD_CURSORON;
   lq_sendCommand(device, LCD_DISPLAYCONTROL | device->DisplayControl);
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_turnOnBlink(struct LiquidCrystalDevice_t *device) {
-  cli();  // turn off  interrupts
+ 
   device->DisplayControl |= LCD_BLINKON;
   lq_sendCommand(device, LCD_DISPLAYCONTROL | device->DisplayControl);
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_turnOffBlink(struct LiquidCrystalDevice_t *device) {
-  cli();  // turn off  interrupts
+ 
   device->DisplayControl &= ~LCD_BLINKON;
   lq_sendCommand(device, LCD_DISPLAYCONTROL | device->DisplayControl);
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_scrollDisplayLeft(struct LiquidCrystalDevice_t *device) {
-  cli();  // turn off  interrupts
+ 
   lq_sendCommand(device, LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVELEFT);
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_scrollDisplayRight(struct LiquidCrystalDevice_t *device) {
-  cli();  // turn off  interrupts
+ 
   lq_sendCommand(device, LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVERIGHT);
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_leftToRight(struct LiquidCrystalDevice_t *device) {
-  cli();  // turn off  interrupts
+ 
   device->DisplayMode |= LCD_ENTRYLEFT;
   lq_sendCommand(device, LCD_ENTRYMODESET | device->DisplayMode);
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_rightToLeft(struct LiquidCrystalDevice_t *device) {
-  cli();  // turn off  interrupts
+ 
   device->DisplayMode &= ~LCD_ENTRYLEFT;
   lq_sendCommand(device, LCD_ENTRYMODESET | device->DisplayMode);
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_turnOnAutoscroll(struct LiquidCrystalDevice_t *device) {
-  cli();  // turn off  interrupts
+ 
   device->DisplayMode |= LCD_ENTRYSHIFTINCREMENT;
   lq_sendCommand(device, LCD_ENTRYMODESET | device->DisplayMode);
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_turnOffAutoscroll(struct LiquidCrystalDevice_t *device) {
-  cli();  // turn off  interrupts
+ 
   device->DisplayMode &= ~LCD_ENTRYSHIFTINCREMENT;
   lq_sendCommand(device, LCD_ENTRYMODESET | device->DisplayMode);
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_createChar(struct LiquidCrystalDevice_t *device, uint8_t slot,
                    uint8_t charmap[8]) {
-  cli();  // turn off  interrupts
+ 
   uint8_t i = 0;
   slot &= 0x7;  // we only have 8 locations 0-7
   lq_sendCommand(device, LCD_SETCGRAMADDR | (slot << 3));
@@ -220,45 +220,39 @@ void lq_createChar(struct LiquidCrystalDevice_t *device, uint8_t slot,
   for (i = 0; i < 8; i++) {
     lq_writeDeviceByte(device, charmap[i], LCD_REGISTER_SELECT_BIT);
   }
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_sendCommand(LiquidCrystalDevice_t *device, uint8_t command) {
-  cli();  // turn off  interrupts
+ 
   lq_writeDeviceByte(device, command, 0);
-  sei();  // turn on interrupts
+ 
 }
 
 void lq_writeDeviceByte(LiquidCrystalDevice_t *device, uint8_t value,
                         uint8_t mode) {
-  cli();  // turn off  interrupts
   uint8_t highnib = value & 0xf0;
   uint8_t lownib = (value << 4) & 0xf0;
 
   lq_writeDevice4Bits(device, highnib | mode);
   lq_writeDevice4Bits(device, lownib | mode);
-  sei();  // turn on interrupts
 };
 
 void lq_writeDevice4Bits(LiquidCrystalDevice_t *device, uint8_t value) {
-  cli();  // turn off  interrupts
   lq_transmitI2C(device, value);
   lq_writeDevicePulse(device, value);
-  sei();  // turn on interrupts
 };
 
 void lq_writeDevicePulse(LiquidCrystalDevice_t *device, uint8_t value) {
-  cli();  // turn off  interrupts
+
   lq_transmitI2C(device, value | LCD_ENABLE_BIT);
   _delay_us(2);
 
   lq_transmitI2C(device, value & ~LCD_ENABLE_BIT);
   _delay_us(50);
-  sei();  // turn on interrupts
 };
 
 void lq_transmitI2C(LiquidCrystalDevice_t *device, uint8_t value) {
-  cli();  // turn off  interrupts
   i2c_master_sendByte(device->Address, value | device->Backlight);
-  sei();  // turn on interrupts
+
 };
