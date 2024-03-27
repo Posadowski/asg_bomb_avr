@@ -6,7 +6,7 @@ OBJCOPY = avr-objcopy
 MCU = atmega328p
 F_CPU = 16000000UL
 CFLAGS = -Wall -Os -mmcu=$(MCU) -DF_CPU=$(F_CPU)
-PORT=COM4
+PORT=COM5
 
 # Directories
 SRC_DIR = src
@@ -41,7 +41,7 @@ create_build_dir:
 	@mkdir -p $(BUILD_DIR)
 
 install: ${TARGET}.hex
-	avrdude -v -c arduino -p ${MCU} -P ${PORT} -b 115200 -U flash:w:$<
+	avrdude -v -c arduino -p ${MCU} -P ${PORT} -b 57600 -D -U flash:w:$<
 
 clean:
 	rm -rf $(BUILD_DIR)
