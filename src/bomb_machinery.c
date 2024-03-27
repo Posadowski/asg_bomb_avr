@@ -32,16 +32,16 @@ void toogle_buzzer_pin(void *arg) {
     uint16_t percent = map(time_to_explode, 0, time_to_explode_start, 0, 100);
     if (time_to_explode > 10) {
       if (percent > 80) {
-        taskMachinery_engque(&head, 1000, toogle_buzzer_pin, NULL);
+        taskMachinery_engque(&head, 1000-1, toogle_buzzer_pin, NULL);
       } else if (percent > 60) {
-        taskMachinery_engque(&head, 750, toogle_buzzer_pin, NULL);
+        taskMachinery_engque(&head, 750-1, toogle_buzzer_pin, NULL);
       } else if (percent > 40) {
-        taskMachinery_engque(&head, 500, toogle_buzzer_pin, NULL);
+        taskMachinery_engque(&head, 500-1, toogle_buzzer_pin, NULL);
       } else if (percent > 20) {
-        taskMachinery_engque(&head, 250, toogle_buzzer_pin, NULL);
+        taskMachinery_engque(&head, 250-1, toogle_buzzer_pin, NULL);
       }
     } else {
-      taskMachinery_engque(&head, 100, toogle_buzzer_pin, NULL);
+      taskMachinery_engque(&head, 100-1, toogle_buzzer_pin, NULL);
     }
   }
 }
@@ -71,13 +71,13 @@ void activateBomb(uint16_t timeToExplode, const char *PassToDefused,
     lq_print(lcd, "password too long");
     return;
   }
-
+  bombArmed = TRUE;
   taskMachinery_engque(&head, 1000, calculate_time_to_explode, NULL);
   setupPWM();
   taskMachinery_engque(&head, 1000, toogle_buzzer_pin, NULL);
   timerON = TRUE;
 
-  bombArmed = TRUE;
+  
   uint8_t bombDefused = FALSE;
   time_to_explode_start = time_to_explode;
 
