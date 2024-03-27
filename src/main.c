@@ -6,6 +6,7 @@
 #include <util/delay.h>
 
 #include "../lib/keypad/keypad.h"
+#include "../lib/lcd/i2c_master.h"
 #include "../lib/lcd/lcd.h"
 #include "../lib/memory/memory.h"
 #include "../lib/task_machinery/task_machinery.h"
@@ -18,9 +19,9 @@
 //#define DEVELOP_VERSION
 
 #ifdef DEVELOP_VERSION
-#define SOFTWARE_VERSION "0.6 DEV"  // 0.3 last arduino version
+#define SOFTWARE_VERSION "0.7 DEV"  // 0.3 last arduino version
 #else
-#define SOFTWARE_VERSION "0.6"  // 0.3 last arduino version
+#define SOFTWARE_VERSION "0.7"  // 0.3 last arduino version
 #endif
 
 #ifdef F_CPU
@@ -41,6 +42,8 @@ mem_data memory = {};
 
 char enteredCommandTable[LCD_LINE_LENGTH];
 
+uint32_t upTime = 0;
+
 void queue_test(void *arg) {
   taskMachinery_engque(&head, 5000, queue_test, NULL);
 }
@@ -60,7 +63,6 @@ int freeHeap() {
 
 #ifdef DEVELOP_VERSION
 void print_task_queue(void *arg) {
-  printf("task queue \n");
   task_queue *current = (task_queue *)arg;
   uint8_t i = 0;
   while (current != NULL) {
@@ -78,6 +80,10 @@ FILE USART_Transmit_stream =
     FDEV_SETUP_STREAM(USART_Transmit_printf, NULL, _FDEV_SETUP_WRITE);
 
 ISR(TIMER1_COMPA_vect) {
+  upTime++;
+  if(upTime%1000 == 0){
+    printf("upTime: %lu\n",upTime/1000);
+  }
   task_queue *current = head;
   while (current != NULL) {
     current->time_to_execute--;
@@ -110,6 +116,7 @@ void init_timer() {
   TCCR1B |= (1 << CS12) | (1 << CS10);  // Prescaler 1024
   sei();                                // turn on intterupt
 }
+
 
 void playSound(int frequency) {
   uint8_t prescalarbits = 0b001;
@@ -223,13 +230,10 @@ void papaj_event() {
 int main(void) {
   USART_Init(MYUBRR);
   stdout = &USART_Transmit_stream;
-  //_delay_ms(2000);
-  DDRB = 0xff;
-
+   i2c_master_init(F_CPU);
   LiquidCrystalDevice_t device = lq_init(
       0x27, LCD_LINE_LENGTH, 2, LCD_5x8DOTS);  // intialize 4-lines display
   lq_turnOnBacklight(&device);  // simply turning on the backlight
-
   lq_clear(&device);
   lq_setCursor(&device, 0, 0);
   lq_print(&device, "ASG Bomb!");
@@ -240,14 +244,14 @@ int main(void) {
   _delay_ms(1000);
 
   ADC_init();
-
   keypad_init();  // define pins in lib/keypad/keypad.h
   #ifdef DEVELOP_VERSION
   taskMachinery_engque(&head, 5000, print_task_queue, NULL);
   #endif
+
+  init_timer();
   taskMachinery_engque(&head, _KEYPAD_CHECK_TIME, keypad_check_key_pressed,
                        NULL);
-  init_timer();
 
   read_data_from_flash(&memory);
  
@@ -261,7 +265,7 @@ int main(void) {
 
     memory.mem_init = 1;
     write_data_to_flash(&memory);
-  }
+  } 
   lq_clear(&device);
   lq_setCursor(&device, 0, 0);
 
@@ -282,7 +286,7 @@ int main(void) {
           lq_print(&device, print);
         }
       } else if (key_pressed == (char)ENTER_KEY) {
-        printf("%s\n", enteredCommandTable);
+        //printf("%s\n", enteredCommandTable);
         if ((enteredCommandTable[0] == '2' && enteredCommandTable[1] == '1' &&
              enteredCommandTable[2] == '3' && enteredCommandTable[3] == '7' &&
              enteredCommandTable[4] == '\0')) {
